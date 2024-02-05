@@ -35,8 +35,8 @@ extern float exp_4096[4096];
 using namespace rainbow;
 
 void Rotation::configure(IO *_io, FilterBank *_filterbank) {
-	filterbank	= _filterbank;
-	io			= _io;
+	filterbank = _filterbank;
+	io         = _io;
 }
 
 void Rotation::change_scale_up(void) {
@@ -120,7 +120,7 @@ bool Rotation::is_spreading(void) {
 
 bool Rotation::is_morphing(void) {
 	for (int i = 0; i < NUM_CHANNELS; i++) {
-		if (motion_morphpos[0] != 0.0) {
+		if (motion_morphpos[0] != 0.0) { // TODO Shouldn't this be [i]?
 			return true;
 		}
 	}
@@ -128,10 +128,9 @@ bool Rotation::is_morphing(void) {
 }
 
 void Rotation::update_spread(int8_t t_spread) {
-
-	int32_t test_motion[NUM_CHANNELS] = {0, 0, 0, 0, 0, 0};
-
+	int32_t test_motion[NUM_CHANNELS] {};
 	float spread_out;
+
 	spread = t_spread;
 	if (spread > old_spread) {
 		spread_out = 1;
@@ -161,7 +160,7 @@ void Rotation::update_spread(int8_t t_spread) {
 
 			//Find an open filter channel:
 			//Our starting point is based on the location of channel 2, and spread outward from there
-			int32_t offset = (((int32_t)i) - 2) * spread;
+			int32_t offset = (((int32_t)i) - 2) * spread; // TODO is cast correct? re: spread is int8_t
 			int32_t test_spot = base_note + offset;
 
 			//Set up test_spot, since the first thing we do is in the loop is test_spot += spread_dir[i]
@@ -193,14 +192,12 @@ void Rotation::update_spread(int8_t t_spread) {
 			}
 
 			test_motion[i] = test_spot;
-
 		}
 	}
 
 	for (int ii = 0 ; ii < NUM_CHANNELS; ii++) {
 		motion_spread_dest[ii] = test_motion[ii];
 	}
-
 }
 
 void Rotation::update_morph(void) {
@@ -217,7 +214,6 @@ void Rotation::update_morph(void) {
 			motion_morphpos[chan] = 1.0f;
 		}
 	}
-
 }
 
 void Rotation::update_motion(void) {
