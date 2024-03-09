@@ -258,7 +258,7 @@ struct FloatReadout : PrismReadoutParam {
 
 			nvgFontSize(ctx.vg, 14.0f);
 			#ifdef USING_CARDINAL_NOT_RACK
-			if (!settings::darkMode)
+			if (!settings::preferDarkPanels)
 				nvgFillColor(ctx.vg, nvgRGBA(0x41, 0x41, 0x41, 0xFF));
 			else
 			#endif
@@ -298,7 +298,7 @@ struct IntegerReadout : PrismReadoutParam {
 
 			char text[128];
 			#ifdef USING_CARDINAL_NOT_RACK
-			if (!settings::darkMode)
+			if (!settings::preferDarkPanels)
 				nvgFillColor(ctx.vg, nvgRGBA(0x41, 0x41, 0x41, 0xFF));
 			else
 			#endif
