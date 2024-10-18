@@ -63,24 +63,24 @@ void Audio::ChannelProcess1(rainbow::IO &io, rack::engine::Input &input, rack::e
 
 				switch(inChannels) {
 					case 1:
-						io.in[i][j] 			= v;
-						io.in[1 + i][j] 		= v;
-						io.in[2 + i][j] 		= v;
-						io.in[3 + i][j] 		= v;
-						io.in[4 + i][j] 		= v;
-						io.in[5 + i][j] 		= v;
+						io.in[i][j] 		= v;
+						io.in[1 + i][j] 	= v;
+						io.in[2 + i][j] 	= v;
+						io.in[3 + i][j] 	= v;
+						io.in[4 + i][j] 	= v;
+						io.in[5 + i][j] 	= v;
 						break;
 					case 2:
-						io.in[i][j] 			= v;
-						io.in[2 + i][j] 		= v;
-						io.in[4 + i][j] 		= v;
+						io.in[i][j] 		= v;
+						io.in[2 + i][j] 	= v;
+						io.in[4 + i][j] 	= v;
 						break;
 					case 3:
-						io.in[i * 2][j] 		= v;
-						io.in[1 + i * 2][j] 	= v;
+						io.in[i * 2][j] 	= v;
+						io.in[1 + i * 2][j] = v;
 						break;
 					default:
-						io.in[i][j] 			= v;
+						io.in[i][j] 		= v;
 				}
 			}
 		}
@@ -112,7 +112,8 @@ void Audio::ChannelProcess1(rainbow::IO &io, rack::engine::Input &input, rack::e
 	if (!outputBuffer1.empty()) {
 		outputFrame1 = outputBuffer1.shift();
 		output.setChannels(1);
-		output.setVoltage(clampSafe((outputFrame1.samples[0] * 5.0f * outputScale), -5.0f, 5.0f), 0);		
+		// output.setVoltage(clampSafe((outputFrame1.samples[0] * 5.0f * outputScale), -5.0f, 5.0f), 0);
+		output.setVoltage(outputFrame1.samples[0] * 5.0f * outputScale, 0);	
 	}
 }
 
@@ -159,24 +160,24 @@ void Audio::ChannelProcess2(rainbow::IO &io, rack::engine::Input &input, rack::e
 
 				switch(inChannels) {
 					case 1:
-						io.in[i][j] 			= v;
-						io.in[1 + i][j] 		= v;
-						io.in[2 + i][j] 		= v;
-						io.in[3 + i][j] 		= v;
-						io.in[4 + i][j] 		= v;
-						io.in[5 + i][j] 		= v;
+						io.in[i][j] 		= v;
+						io.in[1 + i][j] 	= v;
+						io.in[2 + i][j] 	= v;
+						io.in[3 + i][j] 	= v;
+						io.in[4 + i][j] 	= v;
+						io.in[5 + i][j] 	= v;
 						break;
 					case 2:
-						io.in[i][j] 			= v;
-						io.in[2 + i][j] 		= v;
-						io.in[4 + i][j] 		= v;
+						io.in[i][j] 		= v;
+						io.in[2 + i][j] 	= v;
+						io.in[4 + i][j] 	= v;
 						break;
 					case 3:
-						io.in[i * 2][j] 		= v;
-						io.in[1 + i * 2][j] 	= v;
+						io.in[i * 2][j] 	= v;
+						io.in[1 + i * 2][j] = v;
 						break;
 					default:
-						io.in[i][j] 			= v;
+						io.in[i][j] 		= v;
 				}
 			}
 		}
@@ -214,8 +215,10 @@ void Audio::ChannelProcess2(rainbow::IO &io, rack::engine::Input &input, rack::e
 	if (!outputBuffer2.empty()) {
 		outputFrame2 = outputBuffer2.shift();
 		output.setChannels(2);
-		output.setVoltage(clampSafe((outputFrame2.samples[0] * 5.0f * outputScale), -5.0f, 5.0f), 0);
-		output.setVoltage(clampSafe((outputFrame2.samples[1] * 5.0f * outputScale), -5.0f, 5.0f), 1);
+		// output.setVoltage(clampSafe((outputFrame2.samples[0] * 5.0f * outputScale), -5.0f, 5.0f), 0);
+		// output.setVoltage(clampSafe((outputFrame2.samples[1] * 5.0f * outputScale), -5.0f, 5.0f), 1);
+		output.setVoltage(outputFrame2.samples[0] * 5.0f * outputScale, 0);
+		output.setVoltage(outputFrame2.samples[1] * 5.0f * outputScale, 1);
 	}
 }
 
@@ -262,24 +265,24 @@ void Audio::ChannelProcess6(rainbow::IO &io, rack::engine::Input &input, rack::e
 
 				switch(inChannels) {
 					case 1:
-						io.in[i][j] 			= v;
-						io.in[1 + i][j] 		= v;
-						io.in[2 + i][j] 		= v;
-						io.in[3 + i][j] 		= v;
-						io.in[4 + i][j] 		= v;
-						io.in[5 + i][j] 		= v;
+						io.in[i][j] 		= v;
+						io.in[1 + i][j] 	= v;
+						io.in[2 + i][j] 	= v;
+						io.in[3 + i][j] 	= v;
+						io.in[4 + i][j] 	= v;
+						io.in[5 + i][j] 	= v;
 						break;
 					case 2:
-						io.in[i][j] 			= v;
-						io.in[2 + i][j] 		= v;
-						io.in[4 + i][j] 		= v;
+						io.in[i][j] 		= v;
+						io.in[2 + i][j] 	= v;
+						io.in[4 + i][j] 	= v;
 						break;
 					case 3:
-						io.in[i * 2][j] 		= v;
-						io.in[1 + i * 2][j] 	= v;
+						io.in[i * 2][j] 	= v;
+						io.in[1 + i * 2][j] = v;
 						break;
 					default:
-						io.in[i][j] 			= v;
+						io.in[i][j] 		= v;
 				}
 			}
 		}
@@ -306,7 +309,8 @@ void Audio::ChannelProcess6(rainbow::IO &io, rack::engine::Input &input, rack::e
 		outputFrame6 = outputBuffer6.shift();
 		output.setChannels(6);
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			output.setVoltage(clampSafe((outputFrame6.samples[i] * 5.0f * outputScale), -5.0f, 5.0f), i);
+			// output.setVoltage(clampSafe((outputFrame6.samples[i] * 5.0f * outputScale), -5.0f, 5.0f), i);
+			output.setVoltage(outputFrame6.samples[i] * 5.0f * outputScale, i);
 		}
 	}
 }
