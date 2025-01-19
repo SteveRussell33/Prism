@@ -2,7 +2,7 @@ name: Build VCV Rack Plugin
 on: [push, pull_request]
 
 env:
-  rack-sdk-version: latest
+  rack-sdk-version: 2.6.0
   rack-plugin-toolchain-dir: /home/build/rack-plugin-toolchain
 
 defaults:
@@ -79,7 +79,7 @@ jobs:
       - name: Get Rack-SDK
         run: |
           pushd $HOME
-          wget -O Rack-SDK.zip https://vcvrack.com/downloads/Rack-SDK-${{ env.rack-sdk-version }}-mac-${{ matrix.platform }}.zip
+          wget -O Rack-SDK.zip https://vcvrack.com/downloads/Rack-SDK-${{ env.rack-sdk-version }}-mac-x64%2barm64.zip
           unzip Rack-SDK.zip
       - name: Build plugin
         run: |
@@ -97,23 +97,14 @@ jobs:
 
   publish:
     name: Publish plugin
-    # only create a release if a tag was created that is called e.g. v1.2.3
-    # see also https://vcvrack.com/manual/Manifest#version
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     needs:  [build, build-mac]
     steps:
       - uses: actions/checkout@v4
       - uses: FranzDiebold/github-env-vars-action@v2
-      - name: Check if plugin version matches tag
-        run: |
-          pluginversion=`jq -r '.version' plugin.json`
-          if [ "v$pluginversion" != "${{ env.CI_REF_NAME }}" ]; then
-            echo "Plugin version from plugin.json 'v$pluginversion' doesn't match with tag version '${{ env.CI_REF_NAME }}'"
-            exit 1
-          fi
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: Release ${{ env.CI_REF_NAME }}
@@ -128,7 +119,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: _artifacts/**/*.vcvplugin
+          file: _artifacts/**/*
           tag: ${{ github.ref }}
           file_glob: true
 
@@ -153,9 +144,10 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: _artifacts/**/*.vcvplugin
+          file: _artifacts/**/*
           tag: Nightly
           file_glob: true
+          overwrite: true
       - name: Tag Repo
         uses: richardsimko/update-tag@v1
         with:
