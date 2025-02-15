@@ -134,15 +134,22 @@ struct Rainbow : core::PrismModule {
 		NUM_LIGHTS
 	};
 
-	LED *ringLEDs[NUM_FILTS] = {};
-	LED *scaleLEDs[NUM_SCALES] = {};
-	LED *envelopeLEDs[NUM_CHANNELS] = {};
-	LED *qLEDs[NUM_CHANNELS] = {};
-	LED *tuningLEDs[NUM_CHANNELS] = {};
+	// LED *ringLEDs[NUM_FILTS] = {};
+	std::array<LED*, NUM_FILTS> ringLEDs {};
+	// LED *scaleLEDs[NUM_SCALES] = {};
+	std::array<LED*, NUM_SCALES> scaleLEDs {};
+	// LED *envelopeLEDs[NUM_CHANNELS] = {};
+	std::array<LED*, NUM_CHANNELS> envelopeLEDs {};
+	// LED *qLEDs[NUM_CHANNELS] = {};
+	std::array<LED*, NUM_CHANNELS> qLEDs {};
+	// LED *tuningLEDs[NUM_CHANNELS] = {};
+	std::array<LED*, NUM_CHANNELS> tuningLEDs {};
 
-	dsp::VuMeter2 vuMeters[6];
+	// dsp::VuMeter2 vuMeters[6];
+	std::array<dsp::VuMeter2, NUM_CHANNELS> vuMeters;
 	dsp::ClockDivider lightDivider;
-	uint32_t channelClipCnt[6];
+	// uint32_t channelClipCnt[6];
+	std::array<uint32_t, NUM_CHANNELS> channelClipCnt;
 	const float clipLimit = -5.2895f; // Clip at 10V;
 	int frameRate = 735; // 44100Hz / 60fps
 
@@ -220,128 +227,126 @@ struct Rainbow : core::PrismModule {
 		highCPUModeChanged = true;
 	}
 
-	json_t *dataToJson() override {
-
-		json_t *rootJ = json_object();
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
 
 		// highcpu
-		json_t *cpuJ = json_integer((int) highCPUMode);
+		json_t* cpuJ = json_integer((int) highCPUMode);
 		json_object_set_new(rootJ, "highcpu", cpuJ);
 
 		// gliss
-		json_t *glissJ = json_integer((int) io.GLIDE_SWITCH);
+		json_t* glissJ = json_integer((int) io.GLIDE_SWITCH);
 		json_object_set_new(rootJ, "gliss", glissJ);
 
 		// prepost
-		json_t *prepostJ = json_integer((int) io.PREPOST_SWITCH);
+		json_t* prepostJ = json_integer((int) io.PREPOST_SWITCH);
 		json_object_set_new(rootJ, "prepost", prepostJ);
 
 		// scale rotation
-		json_t *scalerotJ = json_integer((int) io.SCALEROT_SWITCH);
+		json_t* scalerotJ = json_integer((int) io.SCALEROT_SWITCH);
 		json_object_set_new(rootJ, "scalerot", scalerotJ);
 
 		// bank
-		json_t *bankJ = json_integer((int) currBank);
+		json_t* bankJ = json_integer((int) currBank);
 		json_object_set_new(rootJ, "bank", bankJ);
 
 		// qlocks
-		json_t *qlocksJ = json_array();
+		json_t* qlocksJ = json_array();
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			json_t *qlockJ = json_integer((int) io.CHANNEL_Q_ON[i]);
+			json_t* qlockJ = json_integer((int) io.CHANNEL_Q_ON[i]);
 			json_array_append_new(qlocksJ, qlockJ);
 		}
 		json_object_set_new(rootJ, "qlocks", qlocksJ);
 
 		// locks
-		json_t *locksJ = json_array();
+		json_t* locksJ = json_array();
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			json_t *lockJ = json_integer((int) io.LOCK_ON[i]);
+			json_t* lockJ = json_integer((int) io.LOCK_ON[i]);
 			json_array_append_new(locksJ, lockJ);
 		}
 		json_object_set_new(rootJ, "locks", locksJ);
 
 		// engine state
-		json_t *note_array	  	= json_array();
-		json_t *scale_array		 = json_array();
-		json_t *scale_bank_array	= json_array();
+		json_t* note_array		 = json_array();
+		json_t* scale_array		 = json_array();
+		json_t* scale_bank_array = json_array();
 
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			json_t *noteJ   		= json_integer(state.note[i]);
-			json_t *scaleJ	  		= json_integer(state.scale[i]);
-			json_t *scale_bankJ		= json_integer(state.scale_bank[i]);
+			json_t* noteJ   	= json_integer(state.note[i]);
+			json_t* scaleJ	  	= json_integer(state.scale[i]);
+			json_t* scale_bankJ	= json_integer(state.scale_bank[i]);
 
-			json_array_append_new(note_array,   	noteJ);
-			json_array_append_new(scale_array,	  scaleJ);
-			json_array_append_new(scale_bank_array,	scale_bankJ);
+			json_array_append_new(note_array, noteJ);
+			json_array_append_new(scale_array, scaleJ);
+			json_array_append_new(scale_bank_array, scale_bankJ);
 		}
 
 		json_object_set_new(rootJ, "note",		note_array);
 		json_object_set_new(rootJ, "scale",		scale_array);
 		json_object_set_new(rootJ, "scalebank",	scale_bank_array);
 
-		json_t *blockJ = json_string(io.FREQ_BLOCK.to_string().c_str());
+		json_t* blockJ = json_string(io.FREQ_BLOCK.to_string().c_str());
 		json_object_set_new(rootJ, "freqblock", blockJ);
 
-		json_t *userscale96_array	= json_array();
+		json_t* userscale96_array	= json_array();
 		for (int i = 0; i < NUM_BANKNOTES; i++) {
-			json_t *noteJ   		= json_real(state.userscale96[i]);
-			json_array_append_new(userscale96_array,   	noteJ);
+			json_t* noteJ   		= json_real(state.userscale96[i]);
+			json_array_append_new(userscale96_array, noteJ);
 		}
 		json_object_set_new(rootJ, "userscale",	userscale96_array);
 
-		json_t *userscale48_array	= json_array();
+		json_t* userscale48_array	= json_array();
 		for (int i = 0; i < NUM_BANKNOTES; i++) {
-			json_t *noteJ   		= json_real(state.userscale48[i]);
-			json_array_append_new(userscale48_array,   	noteJ);
+			json_t* noteJ   		= json_real(state.userscale48[i]);
+			json_array_append_new(userscale48_array, noteJ);
 		}
-		json_object_set_new(rootJ, "userscale48",	userscale48_array);
+		json_object_set_new(rootJ, "userscale48", userscale48_array);
 
 		return rootJ;
 	}
 
-	void dataFromJson(json_t *rootJ) override {
-
+	void dataFromJson(json_t* rootJ) override {
 		// gliss
-		json_t *cpuJ = json_object_get(rootJ, "highcpu");
+		json_t* cpuJ = json_object_get(rootJ, "highcpu");
 		if (cpuJ) {
 			setCPUMode(json_integer_value(cpuJ));
 		}
 
 		// gliss
-		json_t *glissJ = json_object_get(rootJ, "gliss");
+		json_t* glissJ = json_object_get(rootJ, "gliss");
 		if (glissJ)
 			io.GLIDE_SWITCH = json_integer_value(glissJ);
 
 		// prepost
-		json_t *prepostJ = json_object_get(rootJ, "prepost");
+		json_t* prepostJ = json_object_get(rootJ, "prepost");
 		if (prepostJ)
 			io.PREPOST_SWITCH = json_integer_value(prepostJ);
 
 		// gliss
-		json_t *scalerotJ = json_object_get(rootJ, "scalerot");
+		json_t* scalerotJ = json_object_get(rootJ, "scalerot");
 		if (scalerotJ)
 			io.SCALEROT_SWITCH = json_integer_value(scalerotJ);
 
 		// bank
-		json_t *bankJ = json_object_get(rootJ, "bank");
+		json_t* bankJ = json_object_get(rootJ, "bank");
 		if (bankJ)
 			currBank = json_integer_value(bankJ);
 
 		// qlocks
-		json_t *qlocksJ = json_object_get(rootJ, "qlocks");
+		json_t* qlocksJ = json_object_get(rootJ, "qlocks");
 		if (qlocksJ) {
 			for (int i = 0; i < NUM_CHANNELS; i++) {
-				json_t *qlockJ = json_array_get(qlocksJ, i);
+				json_t* qlockJ = json_array_get(qlocksJ, i);
 				if (qlockJ)
 					io.CHANNEL_Q_ON[i] = !!json_integer_value(qlockJ);
 			}
 		}
 
 		// locks
-		json_t *locksJ = json_object_get(rootJ, "locks");
+		json_t* locksJ = json_object_get(rootJ, "locks");
 		if (locksJ) {
 			for (int i = 0; i < NUM_CHANNELS; i++) {
-				json_t *lockJ = json_array_get(locksJ, i);
+				json_t* lockJ = json_array_get(locksJ, i);
 				if (lockJ)
 					io.LOCK_ON[i] = !!json_integer_value(lockJ);
 			}
@@ -353,61 +358,60 @@ struct Rainbow : core::PrismModule {
 		}
 
 		// note
-		json_t *note_array = json_object_get(rootJ, "note");
+		json_t* note_array = json_object_get(rootJ, "note");
 		if (note_array) {
 			for (int i = 0; i < NUM_CHANNELS; i++) {
-				json_t *noteJ = json_array_get(note_array, i);
+				json_t* noteJ = json_array_get(note_array, i);
 				if (noteJ)
 					state.note[i] = json_integer_value(noteJ);
 			}
 		}
 
 		// scale
-		json_t *scale_array = json_object_get(rootJ, "scale");
+		json_t* scale_array = json_object_get(rootJ, "scale");
 		if (scale_array) {
 			for (int i = 0; i < NUM_CHANNELS; i++) {
-				json_t *scaleJ = json_array_get(scale_array, i);
+				json_t* scaleJ = json_array_get(scale_array, i);
 				if (scaleJ)
 					state.scale[i] = json_integer_value(scaleJ);
 			}
 		}
 
 		// note
-		json_t *scale_bank_array = json_object_get(rootJ, "scalebank");
+		json_t* scale_bank_array = json_object_get(rootJ, "scalebank");
 		if (scale_bank_array) {
 			for (int i = 0; i < NUM_CHANNELS; i++) {
-				json_t *scale_bankJ = json_array_get(scale_bank_array, i);
+				json_t* scale_bankJ = json_array_get(scale_bank_array, i);
 				if (scale_bankJ)
 					state.scale_bank[i] = json_integer_value(scale_bankJ);
 			}
 		}
 
-		json_t *blockJ = json_object_get(rootJ, "freqblock");
+		json_t* blockJ = json_object_get(rootJ, "freqblock");
 		if (blockJ)
 			io.FREQ_BLOCK = std::bitset<20>(json_string_value(blockJ));
 
 		// userscale 48
-		json_t *uscale48_array = json_object_get(rootJ, "userscale48");
+		json_t* uscale48_array = json_object_get(rootJ, "userscale48");
 		if (uscale48_array) {
 			for (int i = 0; i < NUM_BANKNOTES; i++) {
-				json_t *noteJ = json_array_get(uscale48_array, i);
+				json_t* noteJ = json_array_get(uscale48_array, i);
 				if (noteJ)
 					state.userscale48[i] = json_real_value(noteJ);
 			}
 		}
 
 		// userscale 96
-		json_t *uscale96_array = json_object_get(rootJ, "userscale");
+		json_t* uscale96_array = json_object_get(rootJ, "userscale");
 		if (uscale96_array) {
 			for (int i = 0; i < NUM_BANKNOTES; i++) {
-				json_t *noteJ = json_array_get(uscale96_array, i);
+				json_t* noteJ = json_array_get(uscale96_array, i);
 				if (noteJ)
 					state.userscale96[i] = json_real_value(noteJ);
 			}
 		}
 
 		load_from_state();
-
 	}
 
 	~Rainbow() {
@@ -416,7 +420,6 @@ struct Rainbow : core::PrismModule {
 	}
 
 	Rainbow() : core::PrismModule(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) { 
-
 		configParam(GLOBAL_Q_PARAM, 0, 4095, 2048, "Global Q");
 		configParam(GLOBAL_LEVEL_PARAM, 0, 8191, 4095, "Global Level");
 		configParam(SPREAD_PARAM, 0, 4095, 0, "Spread");
@@ -465,14 +468,14 @@ struct Rainbow : core::PrismModule {
 		configInput(LOCK135_INPUT, "Lock 1-135");
 		configInput(LOCK246_INPUT, "Lock 6-246");
 
-		for (int i = 0; i < 6; i++) {
+		for (int i = 0; i < NUM_CHANNELS; i++) {
 			configInput(MONO_LEVEL_INPUT + i, string::f("Mono level CV %i", i + 1));
 			configInput(MONO_Q_INPUT + i, string::f("Mono Q %i", i + 1));
 			configOutput(MONO_VOCT_OUTPUT + i, string::f("Mono V/Oct %i", i + 1));
 			configOutput(MONO_ENV_OUTPUT + i, string::f("Mono envelope %i", i + 1));
 		}
 
-		for (int n = 0; n < 6; n++) {
+		for (int n = 0; n < NUM_CHANNELS; n++) {
 			configParam(CHANNEL_LEVEL_PARAM + n, 0, 4095, 4095, "Channel Level");
 			configParam(LEVEL_OUT_PARAM + n, 0, 2, 1, "Channel Level");
 
@@ -500,15 +503,12 @@ struct Rainbow : core::PrismModule {
 		levels.configure(&io);
 		input.configure(&io, &rotation, &envelope, &filterbank, &tuning, &levels);
 
-		// initialise(); // gets called by onReset()
-
 		rightExpander.producerMessage = pMessage;
 		rightExpander.consumerMessage = cMessage;
 
 		pMessage->updated = false;
 		cMessage->updated = false;
 
-		onSampleRateChange();
 		onReset(); // calls initialise()
 	}
 
@@ -516,8 +516,8 @@ struct Rainbow : core::PrismModule {
 		frameRate = APP->engine->getSampleRate() / 60;
 	}
 
-	void onReset() override {
-		for (int i = 0 ; i < NUM_CHANNELS; i++) {
+	void onReset() override final {
+		for (int i = 0; i < NUM_CHANNELS; i++) {
 			io.LOCK_ON[i] = false;
 			io.CHANNEL_Q_ON[i] = false;
 		}
@@ -686,7 +686,7 @@ void Rainbow::process(const ProcessArgs &args) {
 	io.GLOBAL_LEVEL_ADC = params[GLOBAL_LEVEL_PARAM].getValue() / 4095.0f;
 	io.GLOBAL_LEVEL_CV	= inputs[GLOBAL_LEVEL_INPUT].getVoltage() / 5.0f;
 
-	for (int n = 0; n < 6; n++) {
+	for (int n = 0; n < NUM_CHANNELS; n++) {
 		if (!inputs[MONO_LEVEL_INPUT + n].isConnected() && !inputs[POLY_LEVEL_INPUT].isConnected()) { 
 			io.LEVEL_CV[n] = 1.0f;
 		 } else {
@@ -705,8 +705,8 @@ void Rainbow::process(const ProcessArgs &args) {
 	io.SCALE_ADC = (uint16_t)clamp(inputs[SCALE_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
 	io.ROTCV_ADC = (uint16_t)clamp(inputs[ROTATECV_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
 
-	io.FREQCV1_CHAN		= inputs[FREQCV1_INPUT].getChannels();
-	io.FREQCV6_CHAN		= inputs[FREQCV6_INPUT].getChannels();
+	io.FREQCV1_CHAN	= inputs[FREQCV1_INPUT].getChannels();
+	io.FREQCV6_CHAN	= inputs[FREQCV6_INPUT].getChannels();
 	for (int i = 0; i < 3; i++) {
 		io.FREQCV1_CV[i] = clamp(inputs[FREQCV1_INPUT].getVoltage(i) * 0.5f, -5.0f, 5.0f); 
 		io.FREQCV6_CV[i] = clamp(inputs[FREQCV6_INPUT].getVoltage(i) * 0.5f, -5.0f, 5.0f); 
@@ -753,7 +753,7 @@ void Rainbow::process(const ProcessArgs &args) {
 	// Populate poly outputs
 	outputs[POLY_VOCT_OUTPUT].setChannels(6);
 	outputs[POLY_ENV_OUTPUT].setChannels(12);
-	for (int n = 0; n < 6; n++) {
+	for (int n = 0; n < NUM_CHANNELS; n++) {
 		outputs[POLY_ENV_OUTPUT].setVoltage(clamp(io.env_out[n] * 100.0f, 0.0f, 10.0f), n);
 		outputs[POLY_ENV_OUTPUT].setVoltage(io.OUTLEVEL[n] * 10.0f, n + 6);
 		outputs[POLY_VOCT_OUTPUT].setVoltage(io.voct_out[n], n);
@@ -763,14 +763,14 @@ void Rainbow::process(const ProcessArgs &args) {
 		params[Rainbow::LEVEL_OUT_PARAM + n].setValue(io.OUTLEVEL[n]);
 	}
 
-	for (int n = 0; n < 6; n++) {
+	for (int n = 0; n < NUM_CHANNELS; n++) {
 		vuMeters[n].process(args.sampleTime, io.channelLevel[n]);
 	}
 
 	if (io.UI_UPDATE) {
 
 		// Set VCV LEDs
-		for (int n = 0; n < 6; n++) {
+		for (int n = 0; n < NUM_CHANNELS; n++) {
 			io.LOCK_ON[n] ? lights[LOCK_LIGHT + n].setBrightness(1.0f) : lights[LOCK_LIGHT + n].setBrightness(0.0f); 
 			io.CHANNEL_Q_ON[n] ? lights[QLOCK_LIGHT + n].setBrightness(1.0f) : lights[QLOCK_LIGHT + n].setBrightness(0.0f); 
 		}
@@ -1070,7 +1070,7 @@ struct BankWidget : Widget {
 };
 
 struct RainbowWidget : ModuleWidget {
-	RainbowWidget(Rainbow *module) {
+	explicit RainbowWidget(Rainbow *module) {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/prism_Rainbow.svg")));
 

@@ -74,7 +74,7 @@ struct ScalaFile {
 	bool isValid;
 	std::string lastError;
 
-	ScalaDef *parseNote(std::string text) {
+	ScalaDef *parseNote(const std::string &text) {
 
 		if (text.find('/') != std::string::npos) {
 			std::vector<std::string> ratios;
@@ -218,7 +218,7 @@ using namespace prism;
 
 struct RainbowScaleExpander : core::PrismModule {
 
-	const static int MAX_OCTAVE = 11;
+	// const static int MAX_OCTAVE = 11; // Not used
 	const static int NUM_PARAMETERS = 10;
 
 	enum slotState {
@@ -254,27 +254,31 @@ struct RainbowScaleExpander : core::PrismModule {
 
 	const static int NUM_PAGES = 3;
 
-	float minFreq = 13.75f; 	// A0
-	float maxFreq = 28160.0f; 	// A10
+	const float minFreq = 13.75f; 	// A0
+	const float maxFreq = 28160.0f; // A10
 
-	float parameterValues[NUM_PAGES][NUM_PARAMETERS] = {};
-	bool parameterActive[NUM_PAGES][NUM_PARAMETERS] = {};
-	std::string parameterLabels[NUM_PAGES][NUM_PARAMETERS] = {};
-	std::string parameterDescriptions[NUM_PAGES][NUM_PARAMETERS] = {};
+	// float parameterValues[NUM_PAGES][NUM_PARAMETERS] = {};
+	std::array<std::array<float, NUM_PARAMETERS>, NUM_PAGES> parameterValues {};
+	// bool parameterActive[NUM_PAGES][NUM_PARAMETERS] = {};
+	std::array<std::array<bool, NUM_PARAMETERS>, NUM_PAGES> parameterActive {};
+	// std::string parameterLabels[NUM_PAGES][NUM_PARAMETERS] = {};
+	std::array<std::array<std::string, NUM_PARAMETERS>, NUM_PAGES> parameterLabels {};
+	// std::string parameterDescriptions[NUM_PAGES][NUM_PARAMETERS] = {};
+	std::array<std::array<std::string, NUM_PARAMETERS>, NUM_PAGES> parameterDescriptions {};
 
-	gui::PrismReadoutParam *widgetRef[NUM_PARAMETERS] = {};
-	// std::vector<gui::PrismReadoutParam*> widgetRef(NUM_PARAMETERS, nullptr);
+	// gui::PrismReadoutParam *widgetRef[NUM_PARAMETERS] = {};
+	std::array<gui::PrismReadoutParam*, NUM_PARAMETERS> widgetRef {};
 
 	std::string path;
 
 	const float CtoF96 = 96000.0f / (2.0f * core::PI);
 	const float FtoC96 = (2.0f * core::PI) / 96000.0f;
 
-	const float CtoF48 = 48000.0f / (2.0f * core::PI);
+	// const float CtoF48 = 48000.0f / (2.0f * core::PI); // Not used
 	const float FtoC48 = (2.0f * core::PI) / 48000.0f;
 
-	float currFreqs[NUM_BANKNOTES] = {};
-	int currState[NUM_BANKNOTES] = {};
+	std::array<float, NUM_BANKNOTES> currFreqs {};
+	std::array<int, NUM_BANKNOTES> currState {};
 	int currScale = 0;
 	int currNote = 0;
 	int currBank = 0;
@@ -284,11 +288,15 @@ struct RainbowScaleExpander : core::PrismModule {
 
 	std::string name;
 	std::string description;
-	std::string scalename[11] = {};
-	std::string notedesc[231] = {};
+	std::array<std::string, NUM_SCALES> scalename {};
+	std::array<std::string, NUM_BANKNOTES> notedesc {};
 
     ScaleSet scales;
 	ScalaFile scala;
+
+	rack::dsp::SchmittTrigger transferTrigger;
+	rack::dsp::SchmittTrigger loadBankTrigger;
+	rack::dsp::SchmittTrigger executeTrigger;
 
 	json_t *dataToJson() override {
         json_t *rootJ = json_object();
@@ -561,10 +569,6 @@ struct RainbowScaleExpander : core::PrismModule {
 		}
 	}
 
-	rack::dsp::SchmittTrigger transferTrigger;
-	rack::dsp::SchmittTrigger loadBankTrigger;
-	rack::dsp::SchmittTrigger executeTrigger;
-
 	RainbowScaleExpander() : core::PrismModule(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
 		configParam(TRANSFER_PARAM, 0, 1, 0, "Load scales into Rainbow");
 		configParam(SCALE_PARAM, 0, 10, 0, "Select scale from bank");
@@ -605,14 +609,14 @@ struct RainbowScaleExpander : core::PrismModule {
 			*root = 16.3516f;
 		} else {
 			float rootA = A440 / 32.0f;
-			float m3 = 0.0f;
+			// float m3 = 0.0f;
 			float finalm3 = 0.0f;
 			float closest = 1000000.0f;
-			float diff;
+			// float diff;
 
 			for (int i = 1; i < edo; i++) {
-				m3 = pow(2.0, (float)i / (float)edo);
-				diff = fabs(1.2f - m3);
+				float m3 = pow(2.f, (float)i / edo);
+				float diff = fabs(1.2f - m3);
 				if (diff < closest) {
 					closest = diff;
 					finalm3 = m3;
@@ -958,7 +962,7 @@ struct RainbowScaleExpander : core::PrismModule {
 
 		while (currPosinBank < maxSlot) {
 
-			ScalaDef *note = scala.notes[scalaPos];
+			const ScalaDef *note = scala.notes[scalaPos];
 			float freq;
 			float delta;
 			if (note->isRatio) {
@@ -1289,7 +1293,7 @@ static void applyFile(RainbowScaleExpander *module) {
 }
 
 struct RainbowScaleExpanderWidget : ModuleWidget {
-	RainbowScaleExpanderWidget(RainbowScaleExpander *module) {
+	explicit RainbowScaleExpanderWidget(RainbowScaleExpander *module) {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/RainbowScaleExpander.svg")));
 

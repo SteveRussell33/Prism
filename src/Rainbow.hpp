@@ -35,8 +35,8 @@
 #define CENTER_PLATEAU 80
 
 struct RainbowScaleExpanderMessage {
-	float maxq48[NUM_BANKNOTES];
-	float maxq96[NUM_BANKNOTES];
+	std::array<float, NUM_BANKNOTES> maxq48;
+	std::array<float, NUM_BANKNOTES> maxq96;
 	bool updated;
 };
 
@@ -125,15 +125,15 @@ struct Audio {
 	bogaudio::dsp::RedNoiseGenerator brown;
 	bogaudio::dsp::WhiteNoiseGenerator white;
 
-	dsp::SampleRateConverter<1> nInputSrc[6] = {};
-	dsp::DoubleRingBuffer<dsp::Frame<1>, 256> nInputBuffer[6] = {};
-	dsp::Frame<1> nInputFrame[6] = {};
-	dsp::Frame<1> nInputFrames[6][NUM_SAMPLES] = {};
+	dsp::SampleRateConverter<1> nInputSrc[NUM_CHANNELS] = {};
+	dsp::DoubleRingBuffer<dsp::Frame<1>, 256> nInputBuffer[NUM_CHANNELS] = {};
+	dsp::Frame<1> nInputFrame[NUM_CHANNELS] = {};
+	dsp::Frame<1> nInputFrames[NUM_CHANNELS][NUM_SAMPLES] = {};
 
-	dsp::SampleRateConverter<6> outputSrc;
-	dsp::DoubleRingBuffer<dsp::Frame<6>, 256> outputBuffer;
-	dsp::Frame<6> outputFrame = {};
-	dsp::Frame<6> outputFrames[NUM_SAMPLES] = {};
+	dsp::SampleRateConverter<NUM_CHANNELS> outputSrc;
+	dsp::DoubleRingBuffer<dsp::Frame<NUM_CHANNELS>, 256> outputBuffer;
+	dsp::Frame<NUM_CHANNELS> outputFrame = {};
+	dsp::Frame<NUM_CHANNELS> outputFrames[NUM_SAMPLES] = {};
 
 	dsp::SampleRateConverter<1> outputSrc1;
 	dsp::DoubleRingBuffer<dsp::Frame<1>, 256> outputBuffer1;
@@ -145,10 +145,10 @@ struct Audio {
 	dsp::Frame<2> outputFrame2 = {};
 	dsp::Frame<2> outputFrames2[NUM_SAMPLES] = {};
 
-	dsp::SampleRateConverter<6> outputSrc6;
-	dsp::DoubleRingBuffer<dsp::Frame<6>, 256> outputBuffer6;
-	dsp::Frame<6> outputFrame6 = {};
-	dsp::Frame<6> outputFrames6[NUM_SAMPLES] = {};
+	dsp::SampleRateConverter<NUM_CHANNELS> outputSrc6;
+	dsp::DoubleRingBuffer<dsp::Frame<NUM_CHANNELS>, 256> outputBuffer6;
+	dsp::Frame<NUM_CHANNELS> outputFrame6 = {};
+	dsp::Frame<NUM_CHANNELS> outputFrames6[NUM_SAMPLES] = {};
 
    	float generateNoise();
 	void ChannelProcess1(rainbow::IO &io, rack::engine::Input &input, rack::engine::Output &output, rainbow::FilterBank &filterbank);
@@ -286,12 +286,19 @@ struct FilterBank {
 	uint8_t old_scale_bank[NUM_CHANNELS] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 	// filter coefficients
+	// std::array<float*, NUM_CHANNELS> c_hiq {};
+	// std::array<float*, NUM_CHANNELS> c_loq {};
+	// std::array<float*, NUM_CHANNELS> bpretuning {};
+
+	// std::array<float, NUM_BANKNOTES> userscale_bank48;
+	// std::array<float, NUM_BANKNOTES> userscale_bank96;
+
 	float *c_hiq[NUM_CHANNELS] {};
 	float *c_loq[NUM_CHANNELS] {};
 	float *bpretuning[NUM_CHANNELS] {};
 
-	float userscale_bank96[231];
-	float userscale_bank48[231];
+	float userscale_bank96[NUM_BANKNOTES];
+	float userscale_bank48[NUM_BANKNOTES];
 
 	float **filter_out;
 
@@ -399,8 +406,8 @@ struct IO {
 	float				channelLevel[NUM_CHANNELS]; // 0.0 - 1+, 1 = Clipping
 
 	bool				FORCE_RING_UPDATE = true;
- 
-	float				DEBUG[16];
+	
+	// float				DEBUG[16]; // Not used
 };
 
 struct LEDRing {
@@ -512,7 +519,7 @@ struct Rotation {
 
 	float f_morph									= 0.0;
 
-	int8_t spread									= 0;	
+	int8_t spread									= 0;
 	int8_t old_spread								= 1;
 
 	uint32_t rot_update_ctr							= UINT32_MAX;
