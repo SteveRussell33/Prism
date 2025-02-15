@@ -1,3 +1,4 @@
+// cppcheck-suppress-file unusedStructMember
 #pragma once
 
 #include <array>
