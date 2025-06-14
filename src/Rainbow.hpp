@@ -6,10 +6,11 @@
 #include <algorithm>
 using std::clamp;
 #else
+namespace std {
 template<typename T>
 constexpr const T& clamp(const T& v, const T& x, const T& y) {
     return (v < x) ? x : (y < v) ? y : v;
-}
+}}
 #endif
 
 #include <array>
