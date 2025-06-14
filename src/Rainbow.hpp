@@ -1,7 +1,17 @@
 // cppcheck-suppress-file unusedStructMember
 #pragma once
 
+// Rack CI SDK is C++11
+#if __cplusplus >= 201703L
 #include <algorithm>
+using std::clamp;
+#else
+template<typename T>
+T clamp(T v, T x, T y) {
+    return std::max(std::min(v, y), x);
+}
+#endif
+
 #include <array>
 #include <bitset>
 #include <cmath>
