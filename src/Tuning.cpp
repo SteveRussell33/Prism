@@ -27,7 +27,6 @@
  */
 
 #include <math.h>
-
 #include "Rainbow.hpp"
 
 using namespace rainbow;
@@ -57,8 +56,8 @@ void Tuning::update(void) {
 	
 		if (filterbank->filter_type == MAXQ) {
 			// Read buffer knob and normalize input: 0-1
-			t_fo = (float)(io->FREQNUDGE1_ADC);
-			t_fe = (float)(io->FREQNUDGE6_ADC);
+			float t_fo = io->FREQNUDGE1_ADC;
+			float t_fe = io->FREQNUDGE6_ADC;
 
 			if (io->FREQCV1_CHAN > 1) {
 				f_shift_all[0] = pow(2.0f, io->FREQCV1_CV[0]);
@@ -145,13 +144,10 @@ void Tuning::update(void) {
 				if (!io->LOCK_ON[2]) {
 					freq_nudge[2] = f_nudge_odds * coarse_adj[2];
 				}
-
 				if (!io->LOCK_ON[4]) {
 					freq_nudge[4] = f_nudge_odds * coarse_adj[4];
 				}
-			} 
-			// disable freq nudge and shift on channel 3 and 5 when in "1 mode"
-			else { 
+			} else { // disable freq nudge and shift on channel 3 and 5 when in "1 mode"
 				if (!io->LOCK_ON[2]) {
 					freq_nudge[2] = coarse_adj[2];
 				}
@@ -160,7 +156,7 @@ void Tuning::update(void) {
 				}
 			}
 
-		//EVENS
+			//EVENS
 			if (!io->LOCK_ON[5]) {
 				freq_nudge[5] = f_nudge_evens * coarse_adj[5];
 			}
@@ -172,9 +168,7 @@ void Tuning::update(void) {
 				if (!io->LOCK_ON[3]) {
 					freq_nudge[3] = f_nudge_evens * coarse_adj[3];
 				}
-			} 
-			// disable freq nudge and shift on channel 2 and 4 when in "6 mode"
-			else {
+			} else { // disable freq nudge and shift on channel 2 and 4 when in "6 mode"
 				if (!io->LOCK_ON[3]) {
 					freq_nudge[3] = coarse_adj[3];
 				}
@@ -182,10 +176,8 @@ void Tuning::update(void) {
 					freq_nudge[1] = coarse_adj[1];
 				}
 			}
-
 		} else { // BPRE Filter
-
-			t_fo = (float)(io->FREQNUDGE1_ADC + io->FREQCV1_CV[0]) / 4096.0f;
+			float t_fo = (float)(io->FREQNUDGE1_ADC + io->FREQCV1_CV[0]) / 4096.0f;
 			if (t_fo > 1.0f) {
 				t_fo = 1.0f;
 			}
@@ -193,7 +185,7 @@ void Tuning::update(void) {
 				t_fo = -1.0f;
 			}
 
-			t_fe = (float)(io->FREQNUDGE6_ADC + io->FREQCV6_CV[0]) / 4096.0f;
+			float t_fe = (float)(io->FREQNUDGE6_ADC + io->FREQCV6_CV[0]) / 4096.0f;
 			if (t_fe > 1.0f) {
 				t_fe = 1.0f;
 			}
@@ -204,11 +196,11 @@ void Tuning::update(void) {
 			float f_shift_odds	= 1.0f;
 			float f_shift_evens	= 1.0f;
 			
-			f_nudge_odds	*= FREQNUDGE_LPF;
-			f_nudge_odds	+= (1.0f - FREQNUDGE_LPF) * t_fo;
+			f_nudge_odds  *= FREQNUDGE_LPF;
+			f_nudge_odds  += (1.0f - FREQNUDGE_LPF) * t_fo;
 
-			f_nudge_evens	*= FREQNUDGE_LPF;
-			f_nudge_evens	+= (1.0f - FREQNUDGE_LPF) * t_fe;
+			f_nudge_evens *= FREQNUDGE_LPF;
+			f_nudge_evens += (1.0f - FREQNUDGE_LPF) * t_fe;
 
 			if (!io->LOCK_ON[0]) {
 				freq_nudge[0] = f_nudge_odds;
