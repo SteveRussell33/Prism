@@ -431,11 +431,11 @@ struct LEDRing {
 	Q*			q;
 
 #ifdef ARCH_MAC
-	const float sqrt2over2 = sqrt(2.0f) / 2.0f;
-	const float sqrt2      = sqrt(2.0f);
+    const float sqrt2      = sqrt(2.0f);
+	const float sqrt2over2 = sqrt2 / 2.0f;
 #else
-	constexpr static float sqrt2over2 = sqrt(2.0f) / 2.0f;
-	constexpr static float sqrt2	  = sqrt(2.0f);
+    constexpr static float sqrt2      = sqrt(2.0f);
+	constexpr static float sqrt2over2 = sqrt2 / 2.0f;
 #endif
 	constexpr static float maxNudge	  = 1.0f + 4095.0f / 55000.0f;
 	constexpr static float hslRange   = 2.0f / 3.0f;
