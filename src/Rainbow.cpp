@@ -18,18 +18,17 @@ struct LED : LightWidget {
 	Rainbow *module {};
 
 	int id;
-	const float ledRadius = 5.0f;
-	const float ledStrokeWidth = 1.0f;
+	constexpr static float ledRadius = 5.0f;
+	constexpr static float ledStrokeWidth = 1.0f;
 	float xCenter;
 	float yCenter;
 
-	LED(int i, float xPos, float yPos) {
+	LED(int i, float xPos, float yPos) : color(nvgRGB(255.f, 255.f, 255.f)) {
 		id = i;
 		box.pos.x = xPos;
 		box.pos.y = yPos;
 		box.size.x = ledRadius * 2.0f + ledStrokeWidth * 2.0f;
 		box.size.y = ledRadius * 2.0f + ledStrokeWidth * 2.0f;
-		color = nvgRGB(255, 255, 255);
 		Vec ctr = box.getCenter();
 		xCenter = ctr.x / SVG_DPI;
 		yCenter = ctr.y / SVG_DPI;
@@ -134,22 +133,16 @@ struct Rainbow : core::PrismModule {
 		NUM_LIGHTS
 	};
 
-	// LED *ringLEDs[NUM_FILTS] = {};
 	std::array<LED*, NUM_FILTS> ringLEDs {};
-	// LED *scaleLEDs[NUM_SCALES] = {};
 	std::array<LED*, NUM_SCALES> scaleLEDs {};
-	// LED *envelopeLEDs[NUM_CHANNELS] = {};
 	std::array<LED*, NUM_CHANNELS> envelopeLEDs {};
-	// LED *qLEDs[NUM_CHANNELS] = {};
 	std::array<LED*, NUM_CHANNELS> qLEDs {};
-	// LED *tuningLEDs[NUM_CHANNELS] = {};
 	std::array<LED*, NUM_CHANNELS> tuningLEDs {};
 
-	// dsp::VuMeter2 vuMeters[6];
 	std::array<dsp::VuMeter2, NUM_CHANNELS> vuMeters;
 	dsp::ClockDivider lightDivider;
-	// uint32_t channelClipCnt[6];
-	std::array<uint32_t, NUM_CHANNELS> channelClipCnt;
+	std::array<uint32_t, NUM_CHANNELS> channelClipCnt {};
+
 	const float clipLimit = -5.2895f; // Clip at 10V;
 	int frameRate = 735; // 44100Hz / 60fps
 
@@ -270,6 +263,8 @@ struct Rainbow : core::PrismModule {
 		json_t* note_array		 = json_array();
 		json_t* scale_array		 = json_array();
 		json_t* scale_bank_array = json_array();
+
+		populate_state();
 
 		for (int i = 0; i < NUM_CHANNELS; i++) {
 			json_t* noteJ   	= json_integer(state.note[i]);
@@ -439,6 +434,11 @@ struct Rainbow : core::PrismModule {
 		configParam(FREQNUDGE6_PARAM, -4095, 4095, 0, "Freq Nudge evens");
 		configSwitch(MOD135_PARAM, 0, 1, 0, "Mod", {"1", "135"});
 		configSwitch(MOD246_PARAM, 0, 1, 0, "Mod", {"6", "246"});
+		configParam(LOCK135_PARAM, 0, 1, 0, "Inv. Lock 1-135");
+		configParam(LOCK246_PARAM, 0, 1, 0, "Inv. Lock 6-246");
+		// TODO: New Prism::Button needed for these
+		// configSwitch(LOCK135_PARAM, 0, 1, 0, "Inv. Lock 1-135", {"Unlocked", "Locked"});
+		// configSwitch(LOCK246_PARAM, 0, 1, 0, "Inv. Lock 6-246", {"Unlocked", "Locked"});
 
 		configParam(BANK_PARAM, 0, 19, 0, "Bank"); 
 		configParam(SWITCHBANK_PARAM, 0, 1, 0, "Switch bank"); 
@@ -473,21 +473,18 @@ struct Rainbow : core::PrismModule {
 			configInput(MONO_Q_INPUT + i, string::f("Mono Q %i", i + 1));
 			configOutput(MONO_VOCT_OUTPUT + i, string::f("Mono V/Oct %i", i + 1));
 			configOutput(MONO_ENV_OUTPUT + i, string::f("Mono envelope %i", i + 1));
-		}
 
-		for (int n = 0; n < NUM_CHANNELS; n++) {
-			configParam(CHANNEL_LEVEL_PARAM + n, 0, 4095, 4095, "Channel Level");
-			configParam(LEVEL_OUT_PARAM + n, 0, 2, 1, "Channel Level");
+			configParam(CHANNEL_LEVEL_PARAM + i, 0, 4095, 4095, "Channel Level");
+			configParam(LEVEL_OUT_PARAM + i, 0, 2, 1, "Channel Level");
 
-			configParam(CHANNEL_Q_PARAM + n, 0, 4095, 2048, "Channel Q");
-			configParam(CHANNEL_Q_ON_PARAM + n, 0, 1, 0, "Channel Q activate");
+			configParam(CHANNEL_Q_PARAM + i, 0, 4095, 2048, "Channel Q");
+			configButton(CHANNEL_Q_ON_PARAM + i, "Channel Q activate");
 
-			configParam(LOCKON_PARAM + n, 0, 1, 0, "Lock channel");
+			configButton(LOCKON_PARAM + i, "Lock channel");
 
-			configParam(TRANS_PARAM + n, -12, 12, 0, "Semitone transpose"); 
+			configParam(TRANS_PARAM + i, -12, 12, 0, "Semitone transpose"); 
 
-			vuMeters[n].mode = dsp::VuMeter2::RMS;
-			channelClipCnt[n] = 0;
+			vuMeters[i].mode = dsp::VuMeter2::RMS;
 		}
 
     	configBypass(POLY_IN_INPUT, POLY_OUT_OUTPUT);		
@@ -621,6 +618,7 @@ void Rainbow::process(const ProcessArgs &args) {
 
 	if (lock246Trigger.process(inputs[LOCK246_INPUT].getVoltage()) ||
 		lock246ButtonTrigger.process(params[LOCK246_PARAM].getValue())) {
+
 		io.LOCK_ON[5] = !io.LOCK_ON[5];
 		
 		if (io.MOD246_SWITCH == Mod_246) {
@@ -677,11 +675,11 @@ void Rainbow::process(const ProcessArgs &args) {
 
 	int noiseSelected 	= params[NOISE_PARAM].getValue();
 
-	io.MORPH_ADC		= (uint16_t)clamp(params[MORPH_PARAM].getValue() + inputs[MORPH_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
-	io.SPREAD_ADC		= (uint16_t)clamp(params[SPREAD_PARAM].getValue() + inputs[SPREAD_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
+	io.MORPH_ADC		= std::clamp<uint32_t>(params[MORPH_PARAM].getValue() + inputs[MORPH_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
+	io.SPREAD_ADC		= std::clamp<uint32_t>(params[SPREAD_PARAM].getValue() + inputs[SPREAD_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
 
-	io.GLOBAL_Q_LEVEL	= (int16_t)clamp(inputs[GLOBAL_Q_INPUT].getVoltage() * 409.5f, -4095.0f, 4095.0f);
-	io.GLOBAL_Q_CONTROL	= (int16_t)params[GLOBAL_Q_PARAM].getValue();
+	io.GLOBAL_Q_LEVEL	= std::clamp<int32_t>(inputs[GLOBAL_Q_INPUT].getVoltage() * 409.5f, -4095.0f, 4095.0f);
+	io.GLOBAL_Q_CONTROL	= (int32_t)params[GLOBAL_Q_PARAM].getValue();
 
 	io.GLOBAL_LEVEL_ADC = params[GLOBAL_LEVEL_PARAM].getValue() / 4095.0f;
 	io.GLOBAL_LEVEL_CV	= inputs[GLOBAL_LEVEL_INPUT].getVoltage() / 5.0f;
@@ -690,29 +688,29 @@ void Rainbow::process(const ProcessArgs &args) {
 		if (!inputs[MONO_LEVEL_INPUT + n].isConnected() && !inputs[POLY_LEVEL_INPUT].isConnected()) { 
 			io.LEVEL_CV[n] = 1.0f;
 		 } else {
-			io.LEVEL_CV[n] = clamp((inputs[MONO_LEVEL_INPUT + n].getVoltage() + inputs[POLY_LEVEL_INPUT].getVoltage(n) + 5.0f) / 10.0f, 0.0f, 1.0f);
+			io.LEVEL_CV[n] = std::clamp((inputs[MONO_LEVEL_INPUT + n].getVoltage() + inputs[POLY_LEVEL_INPUT].getVoltage(n) + 5.0f) / 10.0f, 0.0f, 1.0f);
 		 }
 
-		io.LEVEL_ADC[n] 		= clamp(params[CHANNEL_LEVEL_PARAM + n].getValue() / 4095.0f, 0.0f, 1.0f);
-		io.CHANNEL_Q_LEVEL[n] 	= (int16_t)clamp((inputs[MONO_Q_INPUT + n].getVoltage() + inputs[POLY_Q_INPUT].getVoltage(n)) * 409.5f, -4095.0f, 4095.0f);
-		io.CHANNEL_Q_CONTROL[n]	= (int16_t)params[CHANNEL_Q_PARAM + n].getValue();
+		io.LEVEL_ADC[n] 		= std::clamp(params[CHANNEL_LEVEL_PARAM + n].getValue() / 4095.0f, 0.0f, 1.0f);
+		io.CHANNEL_Q_LEVEL[n] 	= std::clamp<int32_t>((inputs[MONO_Q_INPUT + n].getVoltage() + inputs[POLY_Q_INPUT].getVoltage(n)) * 409.5f, -4095.0f, 4095.0f);
+		io.CHANNEL_Q_CONTROL[n]	= (int32_t)params[CHANNEL_Q_PARAM + n].getValue();
 		io.TRANS_DIAL[n]		= params[TRANS_PARAM + n].getValue();
 	}
 
-	io.FREQNUDGE1_ADC = (int16_t)params[FREQNUDGE1_PARAM].getValue();
-	io.FREQNUDGE6_ADC = (int16_t)params[FREQNUDGE6_PARAM].getValue();
+	io.FREQNUDGE1_ADC = params[FREQNUDGE1_PARAM].getValue();
+	io.FREQNUDGE6_ADC = params[FREQNUDGE6_PARAM].getValue();
 
-	io.SCALE_ADC = (uint16_t)clamp(inputs[SCALE_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
-	io.ROTCV_ADC = (uint16_t)clamp(inputs[ROTATECV_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
+	io.SCALE_ADC = std::clamp<uint32_t>(inputs[SCALE_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
+	io.ROTCV_ADC = std::clamp<uint32_t>(inputs[ROTATECV_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
 
 	io.FREQCV1_CHAN	= inputs[FREQCV1_INPUT].getChannels();
 	io.FREQCV6_CHAN	= inputs[FREQCV6_INPUT].getChannels();
 	for (int i = 0; i < 3; i++) {
-		io.FREQCV1_CV[i] = clamp(inputs[FREQCV1_INPUT].getVoltage(i) * 0.5f, -5.0f, 5.0f); 
-		io.FREQCV6_CV[i] = clamp(inputs[FREQCV6_INPUT].getVoltage(i) * 0.5f, -5.0f, 5.0f); 
+		io.FREQCV1_CV[i] = std::clamp(inputs[FREQCV1_INPUT].getVoltage(i) * 0.5f, -5.0f, 5.0f); 
+		io.FREQCV6_CV[i] = std::clamp(inputs[FREQCV6_INPUT].getVoltage(i) * 0.5f, -5.0f, 5.0f); 
 	}
 
-	io.SLEW_ADC	= (uint16_t)params[SLEW_PARAM].getValue();
+	io.SLEW_ADC	= (uint32_t)params[SLEW_PARAM].getValue();
 	io.ENV_SWITCH = (EnvelopeMode)params[ENV_PARAM].getValue();
 
 	if (glissTrigger.process(params[VOCTGLIDE_PARAM].getValue())) {
@@ -754,10 +752,10 @@ void Rainbow::process(const ProcessArgs &args) {
 	outputs[POLY_VOCT_OUTPUT].setChannels(6);
 	outputs[POLY_ENV_OUTPUT].setChannels(12);
 	for (int n = 0; n < NUM_CHANNELS; n++) {
-		outputs[POLY_ENV_OUTPUT].setVoltage(clamp(io.env_out[n] * 100.0f, 0.0f, 10.0f), n);
+		outputs[POLY_ENV_OUTPUT].setVoltage(std::clamp(io.env_out[n] * 100.0f, 0.0f, 10.0f), n);
 		outputs[POLY_ENV_OUTPUT].setVoltage(io.OUTLEVEL[n] * 10.0f, n + 6);
 		outputs[POLY_VOCT_OUTPUT].setVoltage(io.voct_out[n], n);
-		outputs[MONO_ENV_OUTPUT + n].setVoltage(clamp(io.env_out[n] * 100.0f, 0.0f, 10.0f));
+		outputs[MONO_ENV_OUTPUT + n].setVoltage(std::clamp(io.env_out[n] * 100.0f, 0.0f, 10.0f));
 		outputs[MONO_VOCT_OUTPUT + n].setVoltage(io.voct_out[n]);
 
 		params[Rainbow::LEVEL_OUT_PARAM + n].setValue(io.OUTLEVEL[n]);
@@ -822,8 +820,8 @@ void Rainbow::process(const ProcessArgs &args) {
 
 		for (int i = 0; i < NUM_FILTS; i++) {
 			if (io.FREQ_BLOCK[i] && ringLEDs[i]) {
-				ringLEDs[i]->color 			= nvgRGBf(0.0f, 0.0f, 0.0f);
-				ringLEDs[i]->colorBorder 	= blockedBorder;
+				ringLEDs[i]->color 		 = nvgRGBf(0.0f, 0.0f, 0.0f);
+				ringLEDs[i]->colorBorder = blockedBorder;
 			} else if (ringLEDs[i]) {
 				ringLEDs[i]->color = nvgRGBf(
 					io.ring[i][0], 
@@ -851,7 +849,7 @@ void Rainbow::process(const ProcessArgs &args) {
 			}
 
 			if ((channelClipCnt[i] & 32) && envelopeLEDs[i]) {
-				envelopeLEDs[i]->color = nvgRGBf(0.0f, 0.0f, 0.0f);
+				envelopeLEDs[i]->color       = nvgRGBf(0.0f, 0.0f, 0.0f);
 				envelopeLEDs[i]->colorBorder = defaultBorder;
 			} else if (envelopeLEDs[i]) {
 				envelopeLEDs[i]->color = nvgRGBf(
@@ -921,7 +919,6 @@ void Rainbow::prepare(void) {
 	input.process_rotateCV();
 	input.process_scaleCV();
 	levels.update();
-	populate_state();
 }
 
 void Rainbow::set_default_param_values(void) {
@@ -940,8 +937,8 @@ void Rainbow::set_default_param_values(void) {
 		rotation.motion_scalecv_overage[i]	= 0;
 	}
 
-	rotation.motion_notejump	= 0;
-	rotation.motion_rotate		= 0;
+	rotation.motion_notejump = 0;
+	rotation.motion_rotate	 = 0;
 
 	filterbank.filter_type = MAXQ;
 	filterbank.filter_mode = TWOPASS;
@@ -972,8 +969,8 @@ void Rainbow::load_from_state(void) {
 			filterbank.userscale_bank48[i] = state.userscale48[i];
 		}
 
-		rotation.motion_notejump	= 0;
-		rotation.motion_rotate		= 0;
+		rotation.motion_notejump = 0;
+		rotation.motion_rotate	 = 0;
 
 		state.initialised = true;
 	}
@@ -1011,34 +1008,33 @@ struct BankWidget : Widget {
 	NVGcolor colors[NUM_SCALEBANKS] = {
 
 		// Shades of Blue
-		nvgRGBf( 255.0f/255.0f,		070.0f/255.0f,	255.0f/255.0f	),
-		nvgRGBf( 250.0f/255.0f,		080.0f/255.0f,	250.0f/255.0f	),
-		nvgRGBf( 245.0f/255.0f,		090.0f/255.0f,	245.0f/255.0f	),
-		nvgRGBf( 240.0f/255.0f,		100.0f/255.0f,	240.0f/255.0f	),
-		nvgRGBf( 235.0f/255.0f,		110.0f/255.0f,	235.0f/255.0f	),
-		nvgRGBf( 230.0f/255.0f,		120.0f/255.0f,	230.0f/255.0f	),
+		nvgRGBf( 255.0f/255.0f,	 070.0f/255.0f,	 255.0f/255.0f	),
+		nvgRGBf( 250.0f/255.0f,	 080.0f/255.0f,	 250.0f/255.0f	),
+		nvgRGBf( 245.0f/255.0f,	 090.0f/255.0f,	 245.0f/255.0f	),
+		nvgRGBf( 240.0f/255.0f,	 100.0f/255.0f,	 240.0f/255.0f	),
+		nvgRGBf( 235.0f/255.0f,	 110.0f/255.0f,	 235.0f/255.0f	),
+		nvgRGBf( 230.0f/255.0f,	 120.0f/255.0f,	 230.0f/255.0f	),
 						
 		// Shades of Cyan
-		nvgRGBf( 150.0f/255.0f,		255.0f/255.0f,	255.0f/255.0f	),
-		nvgRGBf( 130.0f/255.0f,		245.0f/255.0f,	245.0f/255.0f	),
-		nvgRGBf( 120.0f/255.0f,		235.0f/255.0f,	235.0f/255.0f	),
+		nvgRGBf( 150.0f/255.0f,	 255.0f/255.0f,	 255.0f/255.0f	),
+		nvgRGBf( 130.0f/255.0f,	 245.0f/255.0f,	 245.0f/255.0f	),
+		nvgRGBf( 120.0f/255.0f,	 235.0f/255.0f,	 235.0f/255.0f	),
 
 		// Shades of Yellow
-		nvgRGBf( 255.0f/255.0f,		255.0f/255.0f,	150.0f/255.0f	),
-		nvgRGBf( 255.0f/255.0f,		245.0f/255.0f,	130.0f/255.0f	),
-		nvgRGBf( 255.0f/255.0f,		235.0f/255.0f,	120.0f/255.0f	),
-		nvgRGBf( 255.0f/255.0f,		225.0f/255.0f,	110.0f/255.0f	),
+		nvgRGBf( 255.0f/255.0f,	 255.0f/255.0f,	 150.0f/255.0f	),
+		nvgRGBf( 255.0f/255.0f,	 245.0f/255.0f,	 130.0f/255.0f	),
+		nvgRGBf( 255.0f/255.0f,	 235.0f/255.0f,	 120.0f/255.0f	),
+		nvgRGBf( 255.0f/255.0f,	 225.0f/255.0f,	 110.0f/255.0f	),
 
 		// Shades of Green	
-		nvgRGBf( 588.0f/1023.0f,	954.0f/1023.0f,	199.0f/1023.0f	),
-		nvgRGBf( 274.0f/1023.0f,	944.0f/1023.0f,	67.0f/1023.0f	),
-		nvgRGBf( 83.0f/1023.0f,		934.0f/1023.0f,	1.0f/1023.0f	),
-		nvgRGBf( 1.0f/1023.0f,		924.0f/1023.0f,	1.0f/1023.0f	),
-		nvgRGBf( 100.0f/1023.0f,	824.0f/1023.0f,	9.0f/1023.0f	),
-		nvgRGBf( 100.0f/1023.0f,	724.0f/1023.0f,	4.0f/1023.0f	),
+		nvgRGBf( 588.0f/1023.0f, 954.0f/1023.0f, 199.0f/1023.0f	),
+		nvgRGBf( 274.0f/1023.0f, 944.0f/1023.0f, 67.0f/1023.0f	),
+		nvgRGBf( 83.0f/1023.0f,	 934.0f/1023.0f, 1.0f/1023.0f	),
+		nvgRGBf( 1.0f/1023.0f,	 924.0f/1023.0f, 1.0f/1023.0f	),
+		nvgRGBf( 100.0f/1023.0f, 824.0f/1023.0f, 9.0f/1023.0f	),
+		nvgRGBf( 100.0f/1023.0f, 724.0f/1023.0f, 4.0f/1023.0f	),
 
-		nvgRGBf( 900.0f/1023.0f,	900.0f/1023.0f,	900.0f/1023.0f	)
-
+		nvgRGBf( 900.0f/1023.0f, 900.0f/1023.0f, 900.0f/1023.0f	)
 	};
 
 	BankWidget() {
@@ -1217,69 +1213,69 @@ struct RainbowWidget : ModuleWidget {
 		if(module) {
 			BankWidget *bankW = new BankWidget();
 			bankW->module = module;
-			bankW->box.pos = Vec(474.962f, 380.0 - 320.162 - 17.708);
-			bankW->box.size = Vec(80.0, 20.0f);
+			bankW->box.pos = Vec(474.962f, 42.13f);
+			bankW->box.size = Vec(80.f, 20.0f);
 			addChild(bankW);
 
-			float XStartL = 106.5;
-			float XStartR = 256.5 + 2.0;
-			float xDelta = 40.0;
-			float yVoct = 380.0 - 339.500 - 4.5;
-			float yEnv = 380.0 - 261.500 - 4.5;
-			float yQ = 380.0 - 77.500 - 4.5;
+			constexpr static float XStartL = 106.5f;
+			constexpr static float XStartR = 258.5f;
+			constexpr static float xDelta = 40.f;
+			constexpr static float yVoct = 36.f;
+			constexpr static float yEnv = 114.f;
+			constexpr static float yQ = 298.f;
 
 			for (int i = 0; i < 3; i++) {
 				module->qLEDs[i] = new LED(i, XStartL + i * xDelta, yQ);
-				module->qLEDs[i]->module = NULL;
+				module->qLEDs[i]->module = nullptr;
 				addChild(module->qLEDs[i]);
 
 				module->envelopeLEDs[i] = new LED(i, XStartL + i * xDelta, yEnv);
-				module->envelopeLEDs[i]->module = NULL;
+				module->envelopeLEDs[i]->module = nullptr;
 				addChild(module->envelopeLEDs[i]);
 
 				module->tuningLEDs[i] = new LED(i, XStartL + i * xDelta, yVoct);
-				module->tuningLEDs[i]->module = NULL;
+				module->tuningLEDs[i]->module = nullptr;
 				addChild(module->tuningLEDs[i]);
 			}
 
 			for (int i = 3; i < 6; i++) {
 				module->qLEDs[i] = new LED(i, XStartR + (i - 3) * xDelta, yQ);
-				module->qLEDs[i]->module = NULL;
+				module->qLEDs[i]->module = nullptr;
 				addChild(module->qLEDs[i]);
 
 				module->envelopeLEDs[i] = new LED(i, XStartR + (i - 3) * xDelta, yEnv);
-				module->envelopeLEDs[i]->module = NULL;
+				module->envelopeLEDs[i]->module = nullptr;
 				addChild(module->envelopeLEDs[i]);
 
 				module->tuningLEDs[i] = new LED(i, XStartR + (i - 3) * xDelta, yVoct);
-				module->tuningLEDs[i]->module = NULL;
+				module->tuningLEDs[i]->module = nullptr;
 				addChild(module->tuningLEDs[i]);
 			}
 		}
 
 		if (module) {
-			Vec ringBox(Vec(429.258, 137.198 - 2.9));
-			float ringDiv = (core::PI * 2.0f) / NUM_FILTS;
+			Vec ringBox(Vec(429.258f, 134.298f));
+			constexpr static float ringDiv = (core::PI * 2.f) / NUM_FILTS;
 
 			for (int i = 0; i < NUM_FILTS; i++) {
 		
-				float xPos  = sin(core::PI - ringDiv * i) * 50.0f;
-				float yPos  = cos(core::PI - ringDiv * i) * 50.0f;
+				float xPos = sin(core::PI - ringDiv * i) * 50.f;
+				float yPos = cos(core::PI - ringDiv * i) * 50.f;
 
-				module->ringLEDs[i] = new LED(i, ringBox.x + 50 + xPos, ringBox.y + 50.0f + yPos);
+				module->ringLEDs[i] = new LED(i, ringBox.x + 50.f + xPos, ringBox.y + 50.f + yPos);
 				module->ringLEDs[i]->module = module;
 				addChild(module->ringLEDs[i]);
 			}
 
-			float scaleDiv = (core::PI * 2.0f) / NUM_SCALES;
+			constexpr static float scaleDiv = (core::PI * 2.0f) / NUM_SCALES;
 
 			for (int i = 0; i < NUM_SCALES; i++) {
 		
-				float xPos  = sin(core::PI - scaleDiv * i) * 30.0f;
-				float yPos  = cos(core::PI - scaleDiv * i) * 30.0f;
+				float xPos = sin(core::PI - scaleDiv * i) * 30.f;
+				float yPos = cos(core::PI - scaleDiv * i) * 30.f;
 
-				module->scaleLEDs[i] = new LED(i, ringBox.x + 50.0f + xPos, ringBox.y + 50.0f + yPos);
-				module->scaleLEDs[i]->module = NULL;
+				module->scaleLEDs[i] = new LED(i, ringBox.x + 50.f + xPos, ringBox.y + 50.f + yPos);
+				module->scaleLEDs[i]->module = nullptr;
 				addChild(module->scaleLEDs[i]);
 			}
 		}
