@@ -7,8 +7,8 @@
 using std::clamp;
 #else
 template<typename T>
-T clamp(T v, T x, T y) {
-    return std::max(std::min(v, y), x);
+constexpr const T& clamp(const T& v, const T& x, const T& y) {
+    return (v < x) ? x : (y < v) ? y : v;
 }
 #endif
 
