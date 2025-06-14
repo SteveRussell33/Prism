@@ -59,7 +59,7 @@ void Audio::ChannelProcess1(rainbow::IO &io, rack::engine::Input &input, rack::e
 			nInputBuffer[i].startIncr(inLen);
 
 			for (int j = 0; j < NUM_SAMPLES; j++) {
-				int32_t v = (int32_t)clamp(nInputFrames[i][j].samples[0] * MAX_12BIT, MIN_12BIT, MAX_12BIT);
+				int32_t v = std::clamp(nInputFrames[i][j].samples[0] * MAX_12BIT, MIN_12BIT, MAX_12BIT);
 
 				switch(inChannels) {
 					case 1:
@@ -89,14 +89,9 @@ void Audio::ChannelProcess1(rainbow::IO &io, rack::engine::Input &input, rack::e
 		filterbank.process_audio_block();
 
 		// Convert output buffer
-		for (int chan = 0; chan < NUM_CHANNELS; chan++) {
-			for (int i = 0; i < NUM_SAMPLES; i++) {
-				outputFrames1[i].samples[0] = 0;
-			}
-		}
-
-		for (int chan = 0; chan < NUM_CHANNELS; chan++) {
-			for (int i = 0; i < NUM_SAMPLES; i++) {
+		for (int i = 0; i < NUM_SAMPLES; i++) {
+			outputFrames1[i].samples[0] = 0;
+			for (int chan = 0; chan < NUM_CHANNELS; chan++) {
 				outputFrames1[i].samples[0] += io.out[chan][i] / MAX_12BIT;
 			}
 		}
