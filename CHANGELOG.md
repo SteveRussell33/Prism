@@ -12,8 +12,7 @@ Audio: Optimized output summing
 
 Small fixes for Spread and Morph
 
-CI builds: Added ``#include <algorithm>`` conditionally to Rainbow.hpp to fix CI builds (C++11)
-* Local dev builds will use std::clamp (C++17)
+CI builds: use C++17 for ``std::clamp``
 
 2.3.4
 * Rainbow: Fix intermittent wayward output levels in audio processor (due to Audio module init bug)
