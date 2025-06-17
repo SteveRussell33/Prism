@@ -1,4 +1,20 @@
 # Prism change log
+2.4.0
+
+Rainbow:
+~33% to ~50% Rack CPU load improvement - thanks [@danngreen](https://github.com/danngreen)
+* Populate state only when needed
+* Added faster brown noise gen
+* Use std::clamp
+* Some type changes
+
+Audio: Optimized output summing
+
+Small fixes for Spread and Morph
+
+CI builds: Added ``#include <algorithm>`` conditionally to Rainbow.hpp to fix CI builds (C++11)
+* Local dev builds will use std::clamp (C++17)
+
 2.3.4
 * Rainbow: Fix intermittent wayward output levels in audio processor (due to Audio module init bug)
 * Rainbow: Fix CPU mode menu
