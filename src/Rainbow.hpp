@@ -2,7 +2,7 @@
 #pragma once
 
 // Rack CI SDK is C++11
-#if __cplusplus >= 201703L
+/*#if __cplusplus >= 201703L
 #include <algorithm>
 using std::clamp;
 #else
@@ -11,7 +11,7 @@ template<typename T>
 constexpr const T& clamp(const T& v, const T& x, const T& y) {
     return (v < x) ? x : (y < v) ? y : v;
 }}
-#endif
+#endif*/
 
 #include <array>
 #include <bitset>
