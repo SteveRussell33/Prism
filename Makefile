@@ -1,7 +1,7 @@
 # FLAGS will be passed to both the C and C++ compiler
 FLAGS += -flto
 CFLAGS +=
-CXXFLAGS +=
+CXXFLAGS += -std=c++17
 
 # Careful about linking to shared libraries, since you can't assume much about the user's environment and library search path.
 # Static libraries are fine.
@@ -19,3 +19,5 @@ RACK_DIR ?= ../..
 
 # Include the VCV Rack plugin Makefile framework
 include $(RACK_DIR)/plugin.mk
+
+CXXFLAGS := $(filter-out -std=c++11,$(CXXFLAGS))
