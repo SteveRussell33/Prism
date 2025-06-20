@@ -27,8 +27,7 @@
  */
 
 #include "Rainbow.hpp"
-
-extern float exp_4096[4096];
+#include "Constants.hpp"
 
 using namespace rainbow;
 
@@ -108,7 +107,6 @@ void Inputs::param_read_switches(void) {
 	} else {
 		levels->channel_level_lpf = levels->CHANNEL_LEVEL_MIN_LPF;
 	}
-
 }
 
 //Reads ADC, applies hysteresis correction and returns 1 if spread value has changed

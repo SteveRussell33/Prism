@@ -30,16 +30,13 @@
 #include <iostream>
 
 #include "Common.hpp"
+#include "Constants.hpp"
 #include "Droplet.hpp"
 
 using namespace droplet;
 
-extern float exp_4096[4096];
-extern float log_4096[4096];
-extern uint32_t twopass_calibration[3380];
-
 void Filter::configure(IO *_io) {
-	io			= _io;
+	io = _io;
 }
 
 void Filter::initialise() {
@@ -59,7 +56,6 @@ void Filter::reset() {
 			*(ffa+1)      = 0.0f;
 			*(ffa+2)      = 0.0f;
 	}
-
 }
 
 void Filter::update_q(void) {
@@ -83,12 +79,10 @@ void Filter::update_q(void) {
 
 		prev_qval = qval_goal;
 		qval_goal = global_lpf;
-
  	}
  	
  	// SMOOTH OUT DATA BETWEEN ADC READS
 	qval = (uint32_t)(prev_qval + (q_update_ctr * (qval_goal - prev_qval) / 51.0f)); // Q_UPDATE_RATE + 1
-
 }
 
 void Filter::update_env(void) {
@@ -189,7 +183,6 @@ void Filter::filter() {
 	} else {
 		envout_preload = -1.0f * f_blended;
 	}
-
 }
 
 void Filter::onepass() {
@@ -217,7 +210,6 @@ void Filter::onepass() {
 		buf[1] = buf[2];
 		filter_out[i] = buf[1];
 	}
-
 }
 
 void Filter::twopass() {
@@ -293,8 +285,6 @@ void Filter::twopass() {
 		filter_out_b[sample_index] = buf[1];
 
 		filter_out[sample_index] = (ratio_a * filter_out_a[sample_index]) - filter_out_b[sample_index]; // output of filter two needs to be inverted to avoid phase cancellation
-	
 	}
-
 }
 

@@ -1,6 +1,6 @@
 #include <inttypes.h>
 
-float exp_4096[4096] = {
+const float exp_4096[4096] = {
 0.999999,
 0.998,
 0.997,
@@ -4099,7 +4099,7 @@ float exp_4096[4096] = {
 0.0001630267
 };
 
-float log_4096[4096]={
+const float log_4096[4096]={
 0.25,
 0.25,
 0.25,
@@ -8198,7 +8198,7 @@ float log_4096[4096]={
 1
 };
 
-float exp_1voct[4096]={
+const float exp_1voct[4096]={
 1,
 1.0016768025,
 1.0033564168,
@@ -12297,7 +12297,7 @@ float exp_1voct[4096]={
 954.0880599482
 };
 
-uint32_t twopass_calibration[3380] = {
+const uint32_t twopass_calibration[3380] = {
 25277790,
 35852536,
 35852636,

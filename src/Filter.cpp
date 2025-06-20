@@ -31,12 +31,9 @@
 
 #include "Rainbow.hpp"
 #include "scales/Scales.hpp"
+#include "Constants.hpp"
 
 using namespace rainbow;
-
-extern float exp_4096[4096];
-extern float log_4096[4096];
-extern uint32_t twopass_calibration[3380];
 
 // CALCULATE FILTER OUTPUTS
 //filter_out[0-5] are the note[]/scale[]/scale_bank[] filters.

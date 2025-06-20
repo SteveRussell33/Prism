@@ -29,8 +29,7 @@
 
 
 #include "Rainbow.hpp"
-
-extern float exp_4096[4096];
+#include "Constants.hpp"
 
 using namespace rainbow;
 
