@@ -109,7 +109,7 @@ void Rotation::rotate_up(void) {
 	}
 }
 
-bool Rotation::is_spreading(void) {
+bool Rotation::is_spreading(void) { // UNUSED; TODO?
 	for (int i = 0; i < NUM_CHANNELS; i++) {
 		if (motion_spread_dir[i] != 0) {
 			return true;
@@ -120,7 +120,7 @@ bool Rotation::is_spreading(void) {
 
 bool Rotation::is_morphing(void) {
 	for (int i = 0; i < NUM_CHANNELS; i++) {
-		if (motion_morphpos[0] != 0.0) { // TODO Shouldn't this be [i]?
+		if (motion_morphpos[i] != 0.0) {
 			return true;
 		}
 	}
@@ -128,7 +128,7 @@ bool Rotation::is_morphing(void) {
 }
 
 void Rotation::update_spread(int8_t t_spread) {
-	int32_t test_motion[NUM_CHANNELS] {};
+	int32_t test_motion[NUM_CHANNELS] = {99, 99, 99, 99, 99, 99};
 	float spread_out;
 
 	spread = t_spread;
@@ -138,10 +138,6 @@ void Rotation::update_spread(int8_t t_spread) {
 		spread_out = -1;
 	}
 	old_spread = spread;
-
-	for (int ii = 0 ; ii < NUM_CHANNELS; ii++) {
-		test_motion[ii] = 99;
-	}
 
 	int32_t base_note = motion_fadeto_note[2];
 
@@ -160,7 +156,8 @@ void Rotation::update_spread(int8_t t_spread) {
 
 			//Find an open filter channel:
 			//Our starting point is based on the location of channel 2, and spread outward from there
-			int32_t offset = (((int32_t)i) - 2) * spread; // TODO is cast correct? re: spread is int8_t
+			// int32_t offset = (((int32_t)i) - 2) * spread; // TODO is cast correct? re: spread is int8_t
+			int32_t offset = (i - 2) * (int32_t)spread;
 			int32_t test_spot = base_note + offset;
 
 			//Set up test_spot, since the first thing we do is in the loop is test_spot += spread_dir[i]
@@ -182,9 +179,9 @@ void Rotation::update_spread(int8_t t_spread) {
 
 				is_distinct = true;
 				// Check to see if test_spot is a distinct value:
-				for (int j = 0; j < NUM_CHANNELS; j++) {
+				for (uint8_t j = 0; j < NUM_CHANNELS; j++) {
 					//...if the test spot is already assigned to a locked or stationary channel (2), or a channel we already spread'ed, or a blocked frequency then try again
-					if ((i != j && ((test_spot == test_motion[j] && j < i) || (test_spot == motion_fadeto_note[j] && (io->LOCK_ON[j] || j == 2)))) || io->FREQ_BLOCK[test_spot]) {
+					if ((i != j && j < i && ((test_spot == test_motion[j]) || (test_spot == motion_fadeto_note[j] && (io->LOCK_ON[j] || j == 2)))) || io->FREQ_BLOCK[test_spot]) {
 						is_distinct = false;
 					}
 				}

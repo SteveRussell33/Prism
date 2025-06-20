@@ -110,5 +110,18 @@ namespace bogaudio {
 			}
 		};
 
+		struct FastBrownNoiseGenerator : WhiteNoiseGenerator {
+			constexpr static float c0 = 0.0688f;
+			constexpr static float c1 = (1. - c0) * 0.984f;
+
+			float _state = 0;
+
+			float _next() override {
+				auto r = _uniform(_generator);
+				_state = _state * c1 + r * c0;
+				return _state;
+			}
+		};
+
 	} // namespace dsp
 } // namespace bogaudio

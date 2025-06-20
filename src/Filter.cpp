@@ -80,7 +80,7 @@ void Filter::filter_twopass(FilterBank *fb, float **filter_out) {
 		// limit q knob range on second filter
 		if (qc[channel_num] < 3900.0f) {
 			qval_b[channel_num] = 1000.0f;
-		} else if (qc[channel_num] >= 3900.0f) {
+		} else {
 			qval_b[channel_num] = 1000.0f + (qc[channel_num] - 3900.0f) * 15.0f;
 		} // 1000 to 3925
 		
@@ -150,7 +150,6 @@ void Filter::filter_twopass(FilterBank *fb, float **filter_out) {
 			filter_out_b[j][i] = buf[channel_num][scale_num][filter_num][1];
 
 			filter_out[j][i] = (ratio_a * filter_out_a[j][i]) - filter_out_b[j][i]; // output of filter two needs to be inverted to avoid phase cancellation
-		
 		}
 
 		// Set VOCT output
@@ -442,42 +441,40 @@ void Filter::filter_bpre(FilterBank *fb, float **filter_out) {
 
 void Filter::reset_buffer(int i, bool twopass) {
 
-	float *ff = (float *)buf[i];
+	float *ff = reinterpret_cast<float *>(buf[i]);	
 	for (int j = 0; j < (NUM_SCALES * NUM_FILTS); j++) {
-		*(ff+j)		= 0.0f;
-		*(ff+j+1)	= 0.0f;
-		*(ff+j+2)	= 0.0f;
+		*(ff+j)	  = 0.0f;
+		*(ff+j+1) = 0.0f;
+		*(ff+j+2) = 0.0f;
 	}
 
 	if (twopass) {
-		float *ffa = (float *)buf_a[i];
+		float *ffa = reinterpret_cast<float *>(buf_a[i]);		
 		for (int j = 0; j < (NUM_SCALES * NUM_FILTS); j++) {
-			*(ffa+j)        = 0.0f;
-			*(ffa+j+1)      = 0.0f;
-			*(ffa+j+2)      = 0.0f;
+			*(ffa+j)   = 0.0f;
+			*(ffa+j+1) = 0.0f;
+			*(ffa+j+2) = 0.0f;
 		}
 	}
-
 }
 
 void MaxQFilter::reset(FilterBank *fb) {
 
-	float *ff = (float *)buf;
+	float *ff = reinterpret_cast<float *>(buf);
 	for (int j = 0; j < (NUM_SCALES * NUM_FILTS); j++) {
-		*(ff+j)		= 0.0f;
-		*(ff+j+1)	= 0.0f;
-		*(ff+j+2)	= 0.0f;
+		*(ff+j)	  = 0.0f;
+		*(ff+j+1) = 0.0f;
+		*(ff+j+2) = 0.0f;
 	}
 
 	if (fb->filter_mode == TWOPASS) {
-		float *ffa = (float *)buf_a;
+		float *ffa = reinterpret_cast<float *>(buf_a);
 		for (int j = 0; j < (NUM_SCALES * NUM_FILTS); j++) {
-			*(ffa+j)        = 0.0f;
-			*(ffa+j+1)      = 0.0f;
-			*(ffa+j+2)      = 0.0f;
+			*(ffa+j)   = 0.0f;
+			*(ffa+j+1) = 0.0f;
+			*(ffa+j+2) = 0.0f;
 		}
 	}
-
 }
 
 void MaxQFilter::filter(FilterBank *fb, int channel_num, float **filter_out) {
@@ -487,7 +484,6 @@ void MaxQFilter::filter(FilterBank *fb, int channel_num, float **filter_out) {
 	} else {
 		onepass(fb, channel_num, filter_out);
 	}
-
 }
 
 void MaxQFilter::onepass(FilterBank *fb, int channel_num, float **filter_out) {
@@ -576,7 +572,6 @@ void MaxQFilter::onepass(FilterBank *fb, int channel_num, float **filter_out) {
 			}
 		}
 	}
-
 }
 
 void MaxQFilter::twopass(FilterBank *fb, int channel_num, float **filter_out) {
@@ -616,13 +611,13 @@ void MaxQFilter::twopass(FilterBank *fb, int channel_num, float **filter_out) {
 	// limit q knob range on second filter
 	if (qc < 3900.0f) {
 		qval_b = 1000.0f;
-	} else if (qc >= 3900.0f) {
+	} else {
 		qval_b = 1000.0f + (qc - 3900.0f) * 15.0f;
 	} // 1000 to 3925
 	
 	// Q/RESONANCE: c0 = 1 - 2/(decay * samplerate), where decay is around 0.01 to 4.0
 	uint32_t qval_b_idx = (qval_b / 1.4f) + 200;
-	qval_b_idx = clamp(qval_b_idx, 200, 3125);
+	qval_b_idx = std::clamp<uint32_t>(qval_b_idx, 200, 3125);
 
 	if (fb->io->HICPUMODE) { 
 		c0_a = 1.0f - exp_4096[(uint32_t)(qval_a / 1.4f) + 200] / 10.0f; //exp[200...3125]
@@ -663,8 +658,8 @@ void MaxQFilter::twopass(FilterBank *fb, int channel_num, float **filter_out) {
 	// FIXME: 43801543.68f gain could be directly printed into calibration vector
 	
 	// AMPLITUDE: Boost high freqs and boost low resonance
-	c2_a  = (0.003f * c1) - (0.1f * c0_a) + 0.102f;
-	c2	= (0.003f * c1) - (0.1f * c0)   + 0.102f;
+	c2_a = (0.003f * c1) - (0.1f * c0_a) + 0.102f;
+	c2	 = (0.003f * c1) - (0.1f * c0)   + 0.102f;
 	c2 *= ratio_b;
 
 	ptmp_i32 = fb->io->in[channel_num];
@@ -691,7 +686,6 @@ void MaxQFilter::twopass(FilterBank *fb, int channel_num, float **filter_out) {
 		filter_out_b[filter_index][sample_index] = buf[scale_num][filter_num][1];
 
 		filter_out[filter_index][sample_index] = (ratio_a * filter_out_a[filter_index][sample_index]) - filter_out_b[filter_index][sample_index]; // output of filter two needs to be inverted to avoid phase cancellation
-	
 	}
 
 	// Set VOCT output
@@ -758,13 +752,12 @@ void MaxQFilter::twopass(FilterBank *fb, int channel_num, float **filter_out) {
 
 void BpreFilter::reset(FilterBank *fb) {
 
-	float *ff = (float *)buf;
+	float *ff = reinterpret_cast<float *>(buf);
 	for (int j = 0; j < (NUM_SCALES * NUM_FILTS); j++) {
-		*(ff+j)		= 0.0f;
-		*(ff+j+1)	= 0.0f;
-		*(ff+j+2)	= 0.0f;
+		*(ff+j)   = 0.0f;
+		*(ff+j+1) = 0.0f;
+		*(ff+j+2) = 0.0f;
 	}
-
 }
 
 void BpreFilter::filter(FilterBank *fb, int channel_num, float **filter_out) {
@@ -872,7 +865,6 @@ void BpreFilter::filter(FilterBank *fb, int channel_num, float **filter_out) {
 				buf[scale_num][filter_num][1] = iir;
 
 				filter_out[filter_index][sample_index] = fir;
-
 			}
 
 			// VOCT output with glissando

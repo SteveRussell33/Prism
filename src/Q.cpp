@@ -1,4 +1,3 @@
-
 /*
  * params.c - Parameters
  *
@@ -28,13 +27,12 @@
  */
 
 #include <math.h>
-
 #include "Rainbow.hpp"
 
 using namespace rainbow;
 
 void Q::configure(IO *_io) {
-	io			= _io;
+	io = _io;
 }
 
 void Q::update(void) {
@@ -44,26 +42,14 @@ void Q::update(void) {
 
 		float lpf = io->HICPUMODE ? Q_LPF_96 : Q_LPF_48;
 
-		//Check jack + LPF
-		int32_t qg = io->GLOBAL_Q_LEVEL + io->GLOBAL_Q_CONTROL;
-		if (qg < 0) {
-			qg = 0;
-		}
-		if (qg > 4095) {
-			qg = 4095;
-		}
+		//Check jack + LPF		
+		int32_t qg = std::clamp<int32_t>(io->GLOBAL_Q_LEVEL + io->GLOBAL_Q_CONTROL, 0, 4095);
 		
 		global_lpf *= lpf;
 		global_lpf += (1.0f - lpf) * qg;
 
 		for (int i = 0; i < NUM_CHANNELS; i++){
-			int32_t qc = io->CHANNEL_Q_LEVEL[i] + io->CHANNEL_Q_CONTROL[i];
-			if (qc < 0) {
-				qc = 0;
-			}
-			if (qc > 4095) {
-				qc = 4095;
-			}
+			int32_t qc = std::clamp<int32_t>(io->CHANNEL_Q_LEVEL[i] + io->CHANNEL_Q_CONTROL[i], 0, 4095);
 
 			qlockpot_lpf[i] *= lpf;
 			qlockpot_lpf[i] += (1.0f - lpf) * qc;
@@ -81,5 +67,4 @@ void Q::update(void) {
 	for (int i = 0; i < NUM_CHANNELS; i++) {
 		qval[i] = (uint32_t)(prev_qval[i] + (q_update_ctr * (qval_goal[i] - prev_qval[i]) / 51.0f)); // Q_UPDATE_RATE + 1
  	}
-
 }
