@@ -8,7 +8,7 @@
 	"pluginUrl": "https://github.com/SteveRussell33/Prism",
 	"sourceUrl": "https://github.com/SteveRussell33/Prism",
 	"changelogUrl": "https://github.com/SteveRussell33/Prism/blob/Rack2/CHANGELOG.md",
-	"version": "2.3.5b",
+	"version": "2.4.0b",
 	"modules": [
 		{
 			"slug": "Rainbow",
