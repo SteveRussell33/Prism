@@ -31,8 +31,6 @@
 
 using namespace rainbow;
 
-extern float exp_1voct[4096];
-
 void Tuning::configure(IO *_io, FilterBank * _filterbank) {
 	filterbank	= _filterbank;
 	io			= _io;

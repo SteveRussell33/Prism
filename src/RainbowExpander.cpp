@@ -14,10 +14,7 @@
 #include "Common.hpp"
 #include "Rainbow.hpp"
 #include "scales/Scales.hpp"
-
 #include "dsp/noise.hpp"
-
-extern float exp_1voct[4096];
 
 // trim from start (in place)
 static inline void ltrim(std::string &s) {
