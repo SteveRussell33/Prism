@@ -108,14 +108,14 @@ void Rotation::rotate_up(void) {
 	}
 }
 
-bool Rotation::is_spreading(void) { // UNUSED; TODO?
+/*bool Rotation::is_spreading(void) { // UNUSED; TODO?
 	for (int i = 0; i < NUM_CHANNELS; i++) {
 		if (motion_spread_dir[i] != 0) {
 			return true;
 		}
 	}
 	return false;
-}
+}*/
 
 bool Rotation::is_morphing(void) {
 	for (int i = 0; i < NUM_CHANNELS; i++) {
