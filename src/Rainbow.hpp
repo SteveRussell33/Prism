@@ -41,11 +41,13 @@ constexpr const T& clamp(const T& v, const T& x, const T& y) {
 // LPF
 #define MAX_FIR_LPF_SIZE 40
 
+/*** UNUSED
 #define COEF_COEF (2.0 * 3.14159265358979323846 / 96000.0)
 #define TWELFTHROOTTWO 1.05946309436
 #define ROOT 13.75
 #define SLIDEREDITNOTE_LPF 0.980
 #define CENTER_PLATEAU 80
+***/
 
 struct RainbowScaleExpanderMessage {
 	std::array<float, NUM_BANKNOTES> maxq48 {};
@@ -124,8 +126,8 @@ struct Levels;
 struct State;
 
 struct Audio {
-	const float MIN_12BIT = -16777216.0f;
-	const float MAX_12BIT = 16777215.0f;
+	constexpr static float MIN_12BIT = -16777216.0f;
+	constexpr static float MAX_12BIT = 16777215.0f;
 
 	int inputChannels;
 	int outputChannels;
@@ -205,11 +207,11 @@ struct TFilter {
 	virtual void reset(FilterBank *fb) = 0;
 	virtual void filter(FilterBank *fb, int channel_num, float **filter_out) = 0;
 
-	float CROSSFADE_POINT = 4095.0f * 2.0f / 3.0f;
-	float CROSSFADE_WIDTH = 1800.0f;
-	float CROSSFADE_MIN = CROSSFADE_POINT - CROSSFADE_WIDTH / 2.0f;
-	float CROSSFADE_MAX = CROSSFADE_POINT + CROSSFADE_WIDTH / 2.0f;
-	int32_t INPUT_LED_CLIP_LEVEL = 0xFFFFFF;
+	constexpr static float CROSSFADE_POINT = 4095.0f * 2.0f / 3.0f;
+	constexpr static float CROSSFADE_WIDTH = 1800.0f;
+	constexpr static float CROSSFADE_MIN = CROSSFADE_POINT - CROSSFADE_WIDTH / 2.0f;
+	constexpr static float CROSSFADE_MAX = CROSSFADE_POINT + CROSSFADE_WIDTH / 2.0f;
+	const int32_t INPUT_LED_CLIP_LEVEL = 0xFFFFFF;
 
 };
 
@@ -257,11 +259,11 @@ struct Filter {
 	float qval_a[NUM_CHANNELS] = {};	
 	float qc[NUM_CHANNELS] = {};
 
-	float CROSSFADE_POINT = 4095.0f * 2.0f / 3.0f;
-	float CROSSFADE_WIDTH = 1800.0f;
-	float CROSSFADE_MIN = CROSSFADE_POINT - CROSSFADE_WIDTH / 2.0f;
-	float CROSSFADE_MAX = CROSSFADE_POINT + CROSSFADE_WIDTH / 2.0f;
-	int32_t INPUT_LED_CLIP_LEVEL = 0xFFFFFF;
+	constexpr static float CROSSFADE_POINT = 4095.0f * 2.0f / 3.0f;
+	constexpr static float CROSSFADE_WIDTH = 1800.0f;
+	constexpr static float CROSSFADE_MIN = CROSSFADE_POINT - CROSSFADE_WIDTH / 2.0f;
+	constexpr static float CROSSFADE_MAX = CROSSFADE_POINT + CROSSFADE_WIDTH / 2.0f;
+	const int32_t INPUT_LED_CLIP_LEVEL = 0xFFFFFF;
 
 	void filter_twopass(FilterBank *fb, float **filter_out);
 	void filter_onepass(FilterBank *fb, float **filter_out);
@@ -384,8 +386,8 @@ struct IO {
 	bool				ROTDOWN_BUTTON {};
 
 	// Button scale
-	bool				SCALEUP_BUTTON;
-	bool				SCALEDOWN_BUTTON;
+	bool				SCALEUP_BUTTON {};
+	bool				SCALEDOWN_BUTTON {};
 
 	// Bank select
 	bool				CHANGED_BANK {};
@@ -448,7 +450,7 @@ struct LEDRing {
 	uint8_t flash_ctr			  = 0;
 	uint8_t elacs_ctr[NUM_SCALES] = {};
 	
-	float channel_led_colors[NUM_CHANNELS][3] = {
+	constexpr static float channel_led_colors[NUM_CHANNELS][3] = {
 		// New palette by Pyer
 		{242.0f/255.0f,	 100.0f/255.0f,  127.0f/255.0f}, // Red
 		{255.0f/255.0f,	 228.0f/255.0f,  153.0f/255.0f}, // Yellow
@@ -561,7 +563,7 @@ struct Rotation {
 	void jump_scale_with_cv(int8_t shift_amt);
 
 	bool is_morphing(void);
-	bool is_spreading(void); // UNUSED; See Rotation L112
+	// bool is_spreading(void); /* UNUSED; See Rotation L111 */
 
 	void jump_rotate_with_cv(int8_t shift_amt);
 };
@@ -574,11 +576,11 @@ struct Q {
 	float	 qval_goal[NUM_CHANNELS]	= {};
 	float	 prev_qval[NUM_CHANNELS]	= {};
 	
-	float	 global_lpf;
+	float	 global_lpf                 = 0;
 	float	 qlockpot_lpf[NUM_CHANNELS]	= {};
 
 	uint32_t q_update_ctr				= UINT32_MAX; // Initialise to always fire on first pass 
-   	uint32_t Q_UPDATE_RATE				= 50; 
+   	const uint32_t Q_UPDATE_RATE        = 50; 
 
 	uint32_t QPOT_MIN_CHANGE			= 100;
 	float Q_LPF_96						= 0.95f;
@@ -598,20 +600,20 @@ struct Tuning {
 	float coarse_adj[NUM_CHANNELS]     = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
 	float freq_shift[NUM_CHANNELS]     = {};
 
-	float twelveroottwo[25]         = {};
+	float twelveroottwo[25]           = {};
 
-	uint32_t tuning_update_ctr		= UINT32_MAX;
-	uint32_t TUNING_UPDATE_RATE		= 50;
+	uint32_t tuning_update_ctr		  = UINT32_MAX;
+	const uint32_t TUNING_UPDATE_RATE = 50;
 
-	float FREQNUDGE_LPF				= 0.995f;
+	float FREQNUDGE_LPF				  = 0.995f;
 
-	uint16_t mod_mode_135           = 0;
-	uint16_t mod_mode_246           = 0;
+	uint16_t mod_mode_135             = 0;
+	uint16_t mod_mode_246             = 0;
 
-	float f_nudge_odds 				= 1.f;
-	float f_nudge_evens 			= 1.f;
+	float f_nudge_odds 				  = 1.f;
+	float f_nudge_evens 			  = 1.f;
 
-	LPF freq_jack_conditioning[2]   = {};	//LPF and bracketing for freq jacks
+	LPF freq_jack_conditioning[2]     = {};	//LPF and bracketing for freq jacks
 
 	void configure(IO *_io, FilterBank *_filter);
 
@@ -633,10 +635,10 @@ struct Levels {
 
 	// Private
 	uint32_t level_update_ctr		  = UINT32_MAX; // Initialise to always fire on first pass
-	uint32_t LEVEL_UPDATE_RATE		  = 50; 
+	const uint32_t LEVEL_UPDATE_RATE  = 50; 
 	uint32_t SLIDER_CHANGE_MIN		  = 20;
 	float SLIDER_LPF_MIN			  = 0.007f;
-	float LEVEL_RATE				  = 50.0f;
+	const float LEVEL_RATE			  = 50.0f;
 
 	float prev_level[NUM_CHANNELS]	  = {};
 	float level_goal[NUM_CHANNELS]	  = {};
