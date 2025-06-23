@@ -94,10 +94,12 @@ enum Mod246Setting {
 	Mod_246
 };
 
+/*** UNUSED
 enum VOctTrackSetting {
 	VOctTrackOff = 0,
 	VOctTrackOn
 };
+***/
 
 enum EnvelopeMode {
 	Fast = 0,
