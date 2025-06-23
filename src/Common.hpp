@@ -8,7 +8,7 @@
 
 namespace prism::core {
 
-constexpr static double PI = 3.14159265358979323846264338327950288;
+inline constexpr double PI = 3.14159265358979323846264338327950288;
 
 struct PrismModule : rack::Module {
 	PrismModule(int numParams, int numInputs, int numOutputs, int numLights = 0) {
