@@ -105,7 +105,7 @@ void Audio::ChannelProcess1(rainbow::IO &io, rack::engine::Input &input, rack::e
 
 	// Set output
 	if (!outputBuffer1.empty()) {
-		outputFrame1 = outputBuffer1.shift();
+		auto outputFrame1 = outputBuffer1.shift();
 		output.setChannels(1);
 		// output.setVoltage(clampSafe((outputFrame1.samples[0] * 5.0f * outputScale), -5.0f, 5.0f), 0);
 		output.setVoltage(outputFrame1.samples[0] * 5.0f * outputScale, 0);	
@@ -208,7 +208,7 @@ void Audio::ChannelProcess2(rainbow::IO &io, rack::engine::Input &input, rack::e
 
 	// Set output
 	if (!outputBuffer2.empty()) {
-		outputFrame2 = outputBuffer2.shift();
+		auto outputFrame2 = outputBuffer2.shift();
 		output.setChannels(2);
 		// output.setVoltage(clampSafe((outputFrame2.samples[0] * 5.0f * outputScale), -5.0f, 5.0f), 0);
 		// output.setVoltage(clampSafe((outputFrame2.samples[1] * 5.0f * outputScale), -5.0f, 5.0f), 1);
@@ -301,7 +301,7 @@ void Audio::ChannelProcess6(rainbow::IO &io, rack::engine::Input &input, rack::e
 
 	// Set output
 	if (!outputBuffer6.empty()) {
-		outputFrame6 = outputBuffer6.shift();
+		auto outputFrame6 = outputBuffer6.shift();
 		output.setChannels(6);
 		for (int i = 0; i < NUM_CHANNELS; i++) {
 			// output.setVoltage(clampSafe((outputFrame6.samples[i] * 5.0f * outputScale), -5.0f, 5.0f), i);

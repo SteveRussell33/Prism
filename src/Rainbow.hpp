@@ -147,24 +147,16 @@ struct Audio {
 	dsp::Frame<1> nInputFrame[NUM_CHANNELS] = {};
 	dsp::Frame<1> nInputFrames[NUM_CHANNELS][NUM_SAMPLES] = {};
 
-	dsp::SampleRateConverter<NUM_CHANNELS> outputSrc;
-	dsp::DoubleRingBuffer<dsp::Frame<NUM_CHANNELS>, 256> outputBuffer;
-	dsp::Frame<NUM_CHANNELS> outputFrame = {};
-	dsp::Frame<NUM_CHANNELS> outputFrames[NUM_SAMPLES] = {};
-
 	dsp::SampleRateConverter<1> outputSrc1;
 	dsp::DoubleRingBuffer<dsp::Frame<1>, 256> outputBuffer1;
-	dsp::Frame<1> outputFrame1 = {};
 	dsp::Frame<1> outputFrames1[NUM_SAMPLES] = {};
 
 	dsp::SampleRateConverter<2> outputSrc2;
 	dsp::DoubleRingBuffer<dsp::Frame<2>, 256> outputBuffer2;
-	dsp::Frame<2> outputFrame2 = {};
 	dsp::Frame<2> outputFrames2[NUM_SAMPLES] = {};
 
 	dsp::SampleRateConverter<NUM_CHANNELS> outputSrc6;
 	dsp::DoubleRingBuffer<dsp::Frame<NUM_CHANNELS>, 256> outputBuffer6;
-	dsp::Frame<NUM_CHANNELS> outputFrame6 = {};
 	dsp::Frame<NUM_CHANNELS> outputFrames6[NUM_SAMPLES] = {};
 
    	float generateNoise();
