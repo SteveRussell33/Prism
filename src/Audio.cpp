@@ -3,13 +3,23 @@
 using namespace rainbow;
 
 float Audio::generateNoise() {
-	float nO;
+	float nO = 0.f;
 	switch (noiseSelected) {
 		case 0:
 			nO = brown.next() * 10.0f - 5.0f;
 			break;
 		case 1:
-			nO = pink.next() * 10.0f - 5.0f;
+			if (pinkAlgo == 1) {
+				nO = pink.next() * 10.0f - 5.0f;
+			} else if (pinkAlgo == 2) {
+				nO = pink2.next() /* 10.0f - 5.0f*/;
+			} else if (pinkAlgo == 3) {
+				nO = pink3.generate() /* 10.0f - 5.0f*/;
+			} else if (pinkAlgo == 4) {
+				nO = pink4.stepValue() * 10.0f - 5.0f;
+			} else if (pinkAlgo == 5) {
+				nO = pink5.step() * 10.0f - 5.0f;
+			}
 			break;
 		case 2:
 			nO = white.next() * 10.0f - 5.0f;

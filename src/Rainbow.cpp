@@ -206,6 +206,7 @@ struct Rainbow : core::PrismModule {
 	bool highCPUModeChanged = true;
 	int internalSampleRate = 48000;
 	float freqScale = 2.0f;
+	uint8_t pinkAlgo = 1;
 
 	void setCPUMode(bool isHigh) {
 		if (isHigh) {
@@ -220,8 +221,18 @@ struct Rainbow : core::PrismModule {
 		highCPUModeChanged = true;
 	}
 
+	void setPinkGen(const uint8_t algo) {
+		DEBUG("Pink Algo currently = %d", audio.pinkAlgo);
+		pinkAlgo = algo;
+		DEBUG("Pink Algo %d selected", pinkAlgo);
+	}
+
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
+
+		// PinkAlgo
+		json_t* pinkJ = json_integer(pinkAlgo);
+		json_object_set_new(rootJ, "pinkalgo", pinkJ);
 
 		// highcpu
 		json_t* cpuJ = json_integer((int) highCPUMode);
@@ -301,6 +312,10 @@ struct Rainbow : core::PrismModule {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
+		if (json_t* pinkJ = json_object_get(rootJ, "pinkalgo")) {
+			setPinkGen(json_integer_value(pinkJ));
+		}
+
 		// gliss
 		json_t* cpuJ = json_object_get(rootJ, "highcpu");
 		if (cpuJ) {
@@ -730,6 +745,7 @@ void Rainbow::process(const ProcessArgs &args) {
 	audio.inputChannels = std::min(inputs[POLY_IN_INPUT].getChannels(), 6);
 	audio.outputChannels = params[OUTCHAN_PARAM].getValue(); 
 	audio.noiseSelected = noiseSelected;
+	audio.pinkAlgo = pinkAlgo;
 	audio.sampleRate = args.sampleRate;
 	audio.internalSampleRate = internalSampleRate;
 	audio.outputScale = freqScale;
@@ -1296,7 +1312,31 @@ struct RainbowWidget : ModuleWidget {
 				[=]() {rainbow->setCPUMode(false);}
 			));
 		}));
+
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createSubmenuItem("Pink Noise", "", [=](Menu* menu) {
+			menu->addChild(createCheckMenuItem("Algo 1", "",
+				[=]() {return rainbow->pinkAlgo == 1;},
+				[=]() {rainbow->setPinkGen(1);}
+			));
+			menu->addChild(createCheckMenuItem("Algo 2 (Replit)", "",
+				[=]() {return rainbow->pinkAlgo == 2;},
+				[=]() {rainbow->setPinkGen(2);}
+			));
+			menu->addChild(createCheckMenuItem("Algo 3 (Perplexity)", "",
+				[=]() {return rainbow->audio.pinkAlgo == 3;},
+				[=]() {rainbow->setPinkGen(3);}
+			));
+			menu->addChild(createCheckMenuItem("Algo 4 (Paul Kellet)", "",
+				[=]() {return rainbow->audio.pinkAlgo == 4;},
+				[=]() {rainbow->setPinkGen(4);}
+			));
+			menu->addChild(createCheckMenuItem("Algo 5 (tfdsp)", "",
+				[=]() {return rainbow->audio.pinkAlgo == 5;},
+				[=]() {rainbow->setPinkGen(5);}
+			));
+		}));
     }
-};
+};	
 
 Model *modelRainbow = createModel<Rainbow, RainbowWidget>("Rainbow");

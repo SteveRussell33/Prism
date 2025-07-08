@@ -1,4 +1,3 @@
-
 #include "plugin.hpp"
 #include "Common.hpp"
 #include "Droplet.hpp"
@@ -65,10 +64,10 @@ struct Droplet : core::PrismModule {
 		configBypass(IN_INPUT, OUT_OUTPUT);
 
 		filter.configure(&io);
-		filter.initialise();
+		onReset();
 	}
 
-	void onReset() override {
+	void onReset() override final {
 		filter.initialise();
 	}
 

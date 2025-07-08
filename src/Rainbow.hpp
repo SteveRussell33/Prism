@@ -137,8 +137,14 @@ struct Audio {
 	int sampleRate;
 	int internalSampleRate = 48000;
 	float outputScale = 2.0f;
+	uint8_t pinkAlgo = 1;
 
 	bogaudio::dsp::PinkNoiseGenerator pink;
+	bogaudio::dsp::PinkNoiseGenerator2 pink2;
+	bogaudio::dsp::PinkNoiseGenerator3 pink3;
+	PaulKellet::dsp::PinkNoise pink4;
+	tfdsp::PinkNoiseSource pink5;
+
 	bogaudio::dsp::FastBrownNoiseGenerator brown;
 	bogaudio::dsp::WhiteNoiseGenerator white;
 
