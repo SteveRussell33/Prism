@@ -124,37 +124,6 @@ namespace bogaudio {
 		};
 
 		class PinkNoiseGenerator2 {
-		public:
-		    PinkNoiseGenerator2() : rng(std::random_device{}()), white_noise_dist(-1.0, 1.0) {
-		        // Initialize the lowpass filter coefficients
-		        /*for (size_t i = 0; i < NUM_COEFFICIENTS; ++i) {
-		            coefficients[i] = 1.0 / (i + 1);
-		        }*/
-		    }
-
-		    float next() {
-		        // Sum multiple white noise samples to create pink noise
-		        float white_noise = white_noise_dist(rng);
-		        float pink_noise = 0.f;
-
-		        for (size_t i = 0; i < NUM_COEFFICIENTS; ++i) {
-		            pink_noise += coefficients[i] * white_noise; // cppcheck-suppress useStlAlgorithm
-		        }
-
-		        return pink_noise;
-		    }
-
-		private:
-		    static const size_t NUM_COEFFICIENTS = 8;
-		    // std::array<double, NUM_COEFFICIENTS> coefficients;
-		    static constexpr std::array<float, NUM_COEFFICIENTS> coefficients {
-		        1.0, 0.5, 0.333333, 0.25, 0.2, 0.166667, 0.142857, 0.125
-		    };
-		    std::minstd_rand rng;
-		    std::uniform_real_distribution<float> white_noise_dist;
-		};
-
-		class PinkNoiseGenerator3 {
 		private:
 		    std::minstd_rand gen_;
 		    std::uniform_real_distribution<double> uniform_u_ {0.0, 1.0};  // For probability selection
@@ -183,7 +152,7 @@ namespace bogaudio {
 		    };
 
 		public:
-		    PinkNoiseGenerator3() {
+		    PinkNoiseGenerator2() {
 		        std::random_device rd;
 		        gen_.seed(rd());
 		    }
@@ -215,7 +184,7 @@ namespace bogaudio {
 		            accum_ += contrib_[4];
 		        }
 		        
-		        return accum_; // Output the combined signal
+		        return accum_; // The combined signal
 		    }
 		};
 	} // namespace dsp
@@ -225,21 +194,21 @@ namespace PaulKellet::dsp {
     class PinkNoise {
     public:
         PinkNoise () : rd {}, mt { rd() }, dist{ -1.0, 1.0 } {
-            f0 = f1 = f2 = f3 = f4 = f5 = f6 = 0.f;
+            b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.f;
         };
 
         float stepValue () {
             float white = dist(mt);
             // Paul Kellet's refined method, accurate to within +/-0.05dB above 9.2Hz (44.1K sampling rate)
-            f0 = 0.99886f * f0 + 0.0555179f * white;
-            f1 = 0.99332f * f1 + 0.0750759f * white;
-            f2 = 0.96900f * f2 + 0.1538520f * white;
-            f3 = 0.86650f * f3 + 0.3104856f * white;
-            f4 = 0.55000f * f4 + 0.5329522f * white;
-            f5 = -0.7616 * f5 - 0.0168980f * white;
-            float pink = f0 + f1 + f2 + f3 + f4 + f5 + f6 + white * 0.5362f;
-            // pink *= 0.55f;
-            f6 = white * 0.115926f;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+			b1 = 0.99332 * b1 + white * 0.0750759;
+			b2 = 0.96900 * b2 + white * 0.1538520;
+			b3 = 0.86650 * b3 + white * 0.3104856;
+			b4 = 0.55000 * b4 + white * 0.5329522;
+			b5 = -0.7616 * b5 - white * 0.0168980;
+            float pink = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362f;
+            b6 = white * 0.115926f;
+            pink *= 0.67f;
 
             // Paul Kellet's economy method, accurate to within +/-0.5dB above 9.2Hz (44.1K sampling rate)
             // b0 = 0.99765 * b0 + white * 0.0990460;
@@ -254,50 +223,6 @@ namespace PaulKellet::dsp {
         std::random_device rd;
         std::mt19937 mt;
         std::uniform_real_distribution<double> dist;
-        float f0, f1, f2, f3, f4, f5, f6;
+        float b0, b1, b2, b3, b4, b5, b6;
     };
 }
-
-namespace tfdsp {
-    class WhiteNoiseSource {
-    private:
-        std::random_device _seed{};
-        std::minstd_rand _rng;
-        std::normal_distribution<float> _gaussian{0.0, 1.0};
-    public:
-        WhiteNoiseSource() : _rng(_seed()) {}
-
-        float step() { return _gaussian(_rng); }
-    };
-
-    class PinkNoiseSource {
-    private:
-        WhiteNoiseSource _white{};
-        std::array<float, 4> _x{};
-        std::array<float, 4> _y{};
-        std::array<float, 4> _a{{ 1.0f, -2.494956002f, 2.017265875f, -0.522189400f }};
-        std::array<float, 4> _b{{ 0.049922035, -0.095993537, 0.050612699, -0.004408786 }};
-    public:
-        PinkNoiseSource() {}
-
-        float Filter3dbPerOctave(float x) {
-            _x[0] = x;
-            auto y = _b[0] * _x[0];
-            for(std::size_t i = 1; i < 4; ++i)
-                y += _b[i] * _x[i] - _a[i] * _y[i];
-
-            _y[0] = y;
-            for(std::size_t i = 3; i > 0; --i) {
-                _x[i] = _x[i - 1];
-                _y[i] = _y[i - 1];
-            }
-            return y;
-        }
-
-        float step() {
-            auto x = _white.step();
-            return Filter3dbPerOctave(x);
-        }
-    };
-}
-

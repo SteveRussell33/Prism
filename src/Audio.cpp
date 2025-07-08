@@ -12,13 +12,9 @@ float Audio::generateNoise() {
 			if (pinkAlgo == 1) {
 				nO = pink.next() * 10.0f - 5.0f;
 			} else if (pinkAlgo == 2) {
-				nO = pink2.next() /* 10.0f - 5.0f*/;
+				nO = pink2.generate() * 3.0f - 5.0f;
 			} else if (pinkAlgo == 3) {
-				nO = pink3.generate() /* 10.0f - 5.0f*/;
-			} else if (pinkAlgo == 4) {
-				nO = pink4.stepValue() * 10.0f - 5.0f;
-			} else if (pinkAlgo == 5) {
-				nO = pink5.step() * 10.0f - 5.0f;
+				nO = pink3.stepValue();
 			}
 			break;
 		case 2:

@@ -206,7 +206,6 @@ struct Rainbow : core::PrismModule {
 	bool highCPUModeChanged = true;
 	int internalSampleRate = 48000;
 	float freqScale = 2.0f;
-	uint8_t pinkAlgo = 1;
 
 	void setCPUMode(bool isHigh) {
 		if (isHigh) {
@@ -223,15 +222,15 @@ struct Rainbow : core::PrismModule {
 
 	void setPinkGen(const uint8_t algo) {
 		DEBUG("Pink Algo currently = %d", audio.pinkAlgo);
-		pinkAlgo = algo;
-		DEBUG("Pink Algo %d selected", pinkAlgo);
+		audio.pinkAlgo = algo;
+		DEBUG("Pink Algo %d selected", audio.pinkAlgo);
 	}
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
 
 		// PinkAlgo
-		json_t* pinkJ = json_integer(pinkAlgo);
+		json_t* pinkJ = json_integer(audio.pinkAlgo);
 		json_object_set_new(rootJ, "pinkalgo", pinkJ);
 
 		// highcpu
@@ -688,8 +687,6 @@ void Rainbow::process(const ProcessArgs &args) {
 
 	io.FILTER_SWITCH	= (FilterSetting)params[FILTER_PARAM].getValue();
 
-	int noiseSelected 	= params[NOISE_PARAM].getValue();
-
 	io.MORPH_ADC		= std::clamp<uint32_t>(params[MORPH_PARAM].getValue() + inputs[MORPH_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
 	io.SPREAD_ADC		= std::clamp<uint32_t>(params[SPREAD_PARAM].getValue() + inputs[SPREAD_INPUT].getVoltage() * 409.5f, 0.0f, 4095.0f);
 
@@ -744,8 +741,7 @@ void Rainbow::process(const ProcessArgs &args) {
 
 	audio.inputChannels = std::min(inputs[POLY_IN_INPUT].getChannels(), 6);
 	audio.outputChannels = params[OUTCHAN_PARAM].getValue(); 
-	audio.noiseSelected = noiseSelected;
-	audio.pinkAlgo = pinkAlgo;
+	audio.noiseSelected = params[NOISE_PARAM].getValue();
 	audio.sampleRate = args.sampleRate;
 	audio.internalSampleRate = internalSampleRate;
 	audio.outputScale = freqScale;
@@ -1313,29 +1309,23 @@ struct RainbowWidget : ModuleWidget {
 			));
 		}));
 
-		menu->addChild(new MenuSeparator());
-		menu->addChild(createSubmenuItem("Pink Noise", "", [=](Menu* menu) {
-			menu->addChild(createCheckMenuItem("Algo 1", "",
-				[=]() {return rainbow->pinkAlgo == 1;},
-				[=]() {rainbow->setPinkGen(1);}
-			));
-			menu->addChild(createCheckMenuItem("Algo 2 (Replit)", "",
-				[=]() {return rainbow->pinkAlgo == 2;},
-				[=]() {rainbow->setPinkGen(2);}
-			));
-			menu->addChild(createCheckMenuItem("Algo 3 (Perplexity)", "",
-				[=]() {return rainbow->audio.pinkAlgo == 3;},
-				[=]() {rainbow->setPinkGen(3);}
-			));
-			menu->addChild(createCheckMenuItem("Algo 4 (Paul Kellet)", "",
-				[=]() {return rainbow->audio.pinkAlgo == 4;},
-				[=]() {rainbow->setPinkGen(4);}
-			));
-			menu->addChild(createCheckMenuItem("Algo 5 (tfdsp)", "",
-				[=]() {return rainbow->audio.pinkAlgo == 5;},
-				[=]() {rainbow->setPinkGen(5);}
-			));
-		}));
+		if (rainbow->audio.noiseSelected == 1) {
+			menu->addChild(new MenuSeparator());
+			menu->addChild(createSubmenuItem("Pink Noise", "", [=](Menu* menu) {
+				menu->addChild(createCheckMenuItem("Algo 1", "",
+					[=]() {return rainbow->audio.pinkAlgo == 1;},
+					[=]() {rainbow->setPinkGen(1);}
+				));
+				menu->addChild(createCheckMenuItem("Algo 2 (Perplexity)", "",
+					[=]() {return rainbow->audio.pinkAlgo == 2;},
+					[=]() {rainbow->setPinkGen(2);}
+				));
+				menu->addChild(createCheckMenuItem("Algo 3 (Paul Kellet)", "",
+					[=]() {return rainbow->audio.pinkAlgo == 3;},
+					[=]() {rainbow->setPinkGen(3);}
+				));
+			}));
+		}
     }
 };	
 

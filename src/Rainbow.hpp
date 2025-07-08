@@ -141,10 +141,7 @@ struct Audio {
 
 	bogaudio::dsp::PinkNoiseGenerator pink;
 	bogaudio::dsp::PinkNoiseGenerator2 pink2;
-	bogaudio::dsp::PinkNoiseGenerator3 pink3;
-	PaulKellet::dsp::PinkNoise pink4;
-	tfdsp::PinkNoiseSource pink5;
-
+	PaulKellet::dsp::PinkNoise pink3;
 	bogaudio::dsp::FastBrownNoiseGenerator brown;
 	bogaudio::dsp::WhiteNoiseGenerator white;
 
