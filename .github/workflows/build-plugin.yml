@@ -15,8 +15,8 @@ jobs:
     name: Modify plugin version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/cache@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         id: plugin-version-cache
         with:
           path: plugin.json
@@ -40,10 +40,10 @@ jobs:
       matrix:
         platform: [win-x64, lin-x64]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           submodules: recursive
-      - uses: actions/cache@v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         id: plugin-version-cache
         with:
           path: plugin.json
@@ -54,7 +54,7 @@ jobs:
           pushd ${{ env.rack-plugin-toolchain-dir }}
           make plugin-build-${{ matrix.platform }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a 
         with:
           path: ${{ env.rack-plugin-toolchain-dir }}/plugin-build
           name: ${{ matrix.platform }}
@@ -68,10 +68,10 @@ jobs:
       matrix:
         platform: [x64, arm64]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           submodules: recursive
-      - uses: actions/cache@v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         id: plugin-version-cache
         with:
           path: plugin.json
@@ -90,7 +90,7 @@ jobs:
           make dep
           make dist
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a 
         with:
           path: dist/*.vcvplugin
           name: mac-${{ matrix.platform }}
@@ -101,8 +101,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:  [build, build-mac]
     steps:
-      - uses: actions/checkout@v4
-      - uses: FranzDiebold/github-env-vars-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: FranzDiebold/github-env-vars-action@e8118971bd6b60524ae66a2d870bc83088e3a3c9
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
@@ -112,7 +112,7 @@ jobs:
             ${{ env.CI_REPOSITORY_NAME }} VCV Rack Plugin ${{ env.CI_REF_NAME }}
           draft: false
           prerelease: false
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c 
         with:
           path: _artifacts
       - name: Upload release assets
@@ -131,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, build-mac]
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c 
         with:
           path: _artifacts
       - name: Delete old release assets
