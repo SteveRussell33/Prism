@@ -135,7 +135,7 @@ jobs:
         with:
           path: _artifacts
       - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
+        uses: mknejp/delete-release-assets@94e5896e003fe67dcd81273e1ce45b90b5f1086d
         with:
           token: ${{ github.token }}
           tag: Nightly # This may also be of the form 'refs/tags/staging'
@@ -149,7 +149,7 @@ jobs:
           file_glob: true
           overwrite: true
       - name: Tag Repo
-        uses: richardsimko/update-tag@v1
+        uses: richardsimko/update-tag@d43d3236a342abd387f0ba5d6a7bc93b77e0e718
         with:
           tag_name: Nightly
         env:
