@@ -1279,7 +1279,7 @@ struct RainbowWidget : ModuleWidget {
 				addChild(module->ringLEDs[i]);
 			}
 
-			constexpr static float scaleDiv = (core::PI * 2.0f) / NUM_SCALES;
+			constexpr static float scaleDiv = (core::PI * 2.f) / NUM_SCALES;
 
 			for (int i = 0; i < NUM_SCALES; i++) {
 		
@@ -1312,7 +1312,7 @@ struct RainbowWidget : ModuleWidget {
 		if (rainbow->audio.noiseSelected == 1) {
 			menu->addChild(new MenuSeparator());
 			menu->addChild(createSubmenuItem("Pink Noise", "", [=](Menu* menu) {
-				menu->addChild(createCheckMenuItem("Algo 1", "",
+				menu->addChild(createCheckMenuItem("Algo 1 (default)", "",
 					[=]() {return rainbow->audio.pinkAlgo == 1;},
 					[=]() {rainbow->setPinkGen(1);}
 				));
