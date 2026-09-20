@@ -16,19 +16,11 @@ void Audio::ChannelProcess(droplet::IO &io, rack::engine::Input &input, rack::en
 	if (!input.isConnected()) {
 		float nO;
 		switch (noiseSelected) {
-			case 0:
-				nO = brown.next() * 10.0f - 5.0f;
-				break;
-			case 1:
-				nO = pink.next() * 10.0f - 5.0f;
-				break;
-			case 2:
-				nO = white.next() * 10.0f - 5.0f;
-				break;
-			default:
-				nO = pink.next() * 10.0f - 5.0f;
+			case 0:	nO = brown.next() * 10.0f - 5.0f; break;
+			case 1:	nO = pink.next()  * 10.0f - 5.0f; break;
+			case 2:	nO = white.next() * 10.0f - 5.0f; break;
+			default: nO = pink.next() * 10.0f - 5.0f;
 		}
-
 		sample = nO / 5.0f;
 	} else {
 		sample = input.getVoltage(0) / 5.0f;
