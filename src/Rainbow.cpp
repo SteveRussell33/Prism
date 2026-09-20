@@ -1291,9 +1291,7 @@ struct RainbowWidget : ModuleWidget {
 				module->tuningLEDs[i]->module = nullptr;
 				addChild(module->tuningLEDs[i]);
 			}
-		}
 
-		if (module) {
 			Vec ringBox(Vec(429.258f, 134.298f));
 			constexpr static float ringDiv = (core::PI * 2.f) / NUM_FILTS;
 
