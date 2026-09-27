@@ -2,6 +2,13 @@
 
 using namespace rainbow;
 
+namespace {
+	constexpr float PINK_NOISE_OUTPUT_RMS = 2.1821789f; // Algo 1 steady-state AC RMS.
+	constexpr float PINK_ALGO_2_GAIN = PINK_NOISE_OUTPUT_RMS / 0.5210484f; // Algo 2 steady-state RMS.
+	constexpr float PINK_ALGO_3_GAIN = PINK_NOISE_OUTPUT_RMS / 1.180793f; // Algo 3 steady-state RMS.
+	constexpr float PINK_NOISE_OFFSET = -5.0f;
+}
+
 float Audio::generateNoise() {
 	float nO = 0.f;
 	switch (noiseSelected) {
@@ -10,11 +17,11 @@ float Audio::generateNoise() {
 			break;
 		case 1:
 			if (pinkAlgo == 1) {
-				nO = pink.next() * 10.0f - 5.0f;
+				nO = pink.next() * 10.0f + PINK_NOISE_OFFSET;
 			} else if (pinkAlgo == 2) {
-				nO = pink2.generate() * 3.0f - 5.0f;
+				nO = pink2.generate() * PINK_ALGO_2_GAIN + PINK_NOISE_OFFSET;
 			} else if (pinkAlgo == 3) {
-				nO = pink3.stepValue();
+				nO = pink3.stepValue() * PINK_ALGO_3_GAIN + PINK_NOISE_OFFSET;
 			}
 			break;
 		case 2:
